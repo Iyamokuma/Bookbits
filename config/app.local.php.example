@@ -1,0 +1,18 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Local secrets — copy to config/app.local.php (gitignored) and fill in your values.
+ * Never commit app.local.php.
+ */
+return [
+    'BOOKBITS_ADMIN_EMAIL'        => 'admin@bookbits.com',
+    'BOOKBITS_ADMIN_PASSWORD'     => 'change-me',
+    'BOOKBITS_PAYSTACK_PUBLIC_KEY'=> 'pk_test_your_key_here',
+    'BOOKBITS_PAYSTACK_SECRET_KEY'=> 'sk_test_your_key_here',
+    'BOOKBITS_KLUMP_PUBLIC_KEY'   => '',
+    'BOOKBITS_KLUMP_SECRET_KEY'   => '',
+    'BOOKBITS_KORAPAY_PUBLIC_KEY' => '',
+    'BOOKBITS_KORAPAY_SECRET_KEY' => '',
+];

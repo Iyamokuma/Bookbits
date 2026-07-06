@@ -1,0 +1,35 @@
+# Archives & backups
+*.zip
+*.tar
+*.tar.gz
+
+# Cursor / IDE (do not publish agent or editor metadata)
+.cursor/
+.cursorrules
+.agent/
+agent-transcripts/
+mcps/
+*.cursor-*
+
+# Local secrets & environment overrides
+.env
+.env.*
+config/database.local.php
+config/app.local.php
+
+# OS & editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs & temp
+*.log
+tmp/
+temp/
+
+# Uploaded user content (keep folder structure via .gitkeep if needed)
+assets/uploads/**/*
+!assets/uploads/**/.gitkeep
