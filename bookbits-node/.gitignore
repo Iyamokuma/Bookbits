@@ -8,6 +8,7 @@ node_modules/
 # ignored directory to apply the negation below.
 public/uploads/*
 !public/uploads/covers/
+!public/uploads/blog/
 npm-debug.log*
 .DS_Store
 *.log
