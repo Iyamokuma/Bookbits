@@ -523,3 +523,22 @@ SET @sql := IF(@ua = 0, 'ALTER TABLE `blogs` ADD COLUMN `updated_at` TIMESTAMP N
 PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
+
+-- Password reset tokens (also auto-created by the app if missing)
+CREATE TABLE IF NOT EXISTS `password_resets` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `email` VARCHAR(191) NOT NULL,
+    `token` VARCHAR(64) NOT NULL,
+    `expires_at` DATETIME NOT NULL,
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uq_password_resets_token` (`token`),
+    KEY `idx_password_resets_email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+SET @tn := (SELECT COUNT(*) FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'orders' AND COLUMN_NAME = 'tracking_number');
+SET @sql := IF(@tn = 0, 'ALTER TABLE `orders` ADD COLUMN `tracking_number` VARCHAR(120) NULL DEFAULT NULL AFTER `notes`', 'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;

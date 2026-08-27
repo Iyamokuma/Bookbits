@@ -50,7 +50,42 @@ if ($name === '' || $phone === '' || $addr === '' || $city === '' || $state === 
         'notes'            => $notes,
         'payment_gateway'  => $gateway,
     ];
-    $_SESSION['flash_checkout'] = 'Please complete all required delivery fields.';
+    $_SESSION['flash_checkout'] = 'Please complete all required delivery fields — we need your full address before placing an order.';
+    header('Location: ' . BOOKBITS_BASE . '/checkout.php');
+    exit;
+}
+
+$phoneDigits = preg_replace('/\D+/', '', $phone) ?? '';
+if (strlen($phoneDigits) < 10) {
+    $_SESSION['checkout_draft'] = [
+        'shipping_name'    => $name,
+        'shipping_phone'   => $phone,
+        'shipping_address' => $addr,
+        'shipping_city'    => $city,
+        'shipping_state'   => $state,
+        'shipping_zip'     => $zip,
+        'shipping_country' => $country,
+        'notes'            => $notes,
+        'payment_gateway'  => $gateway,
+    ];
+    $_SESSION['flash_checkout'] = 'Please enter a valid phone number (at least 10 digits) so we can reach you for delivery.';
+    header('Location: ' . BOOKBITS_BASE . '/checkout.php');
+    exit;
+}
+
+if (strlen($addr) < 8) {
+    $_SESSION['checkout_draft'] = [
+        'shipping_name'    => $name,
+        'shipping_phone'   => $phone,
+        'shipping_address' => $addr,
+        'shipping_city'    => $city,
+        'shipping_state'   => $state,
+        'shipping_zip'     => $zip,
+        'shipping_country' => $country,
+        'notes'            => $notes,
+        'payment_gateway'  => $gateway,
+    ];
+    $_SESSION['flash_checkout'] = 'Please enter a complete street address (house number, street, and area) before placing your order.';
     header('Location: ' . BOOKBITS_BASE . '/checkout.php');
     exit;
 }
@@ -168,7 +203,10 @@ try {
             'notes'            => $notes,
             'payment_gateway'  => $gateway,
         ];
-        $_SESSION['flash_checkout'] = 'Order was created, but payment could not start: ' . ($gatewayInit['error'] ?? 'Unknown gateway error');
+        // Keep technical details off the customer-facing UI; log for the merchant.
+        $tech = (string) ($gatewayInit['error'] ?? 'gateway_init_failed');
+        error_log('Bookbits payment init failed for order #' . $orderId . ': ' . $tech);
+        $_SESSION['flash_checkout'] = 'We couldn’t start payment for your order. Please try again in a moment, or choose a different payment method. If it keeps happening, contact us on WhatsApp.';
         header('Location: ' . BOOKBITS_BASE . '/checkout.php');
         exit;
     }
@@ -186,7 +224,8 @@ try {
         'notes'            => $notes,
         'payment_gateway'  => $gateway,
     ];
-    $_SESSION['flash_checkout'] = 'Order was created, but payment initialization failed.';
+    error_log('Bookbits payment init exception for order #' . $orderId . ': ' . $e->getMessage());
+    $_SESSION['flash_checkout'] = 'We couldn’t start payment for your order. Please try again in a moment, or choose a different payment method. If it keeps happening, contact us on WhatsApp.';
     header('Location: ' . BOOKBITS_BASE . '/checkout.php');
     exit;
 }

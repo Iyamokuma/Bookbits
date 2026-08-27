@@ -21,6 +21,12 @@ if ($name === '' || $email === '' || strlen($password) < 8) {
     exit;
 }
 
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    $_SESSION['flash_error'] = 'Please enter a valid email address.';
+    header('Location: ' . BOOKBITS_BASE . '/register.php?redirect=' . rawurlencode((string) $redirect));
+    exit;
+}
+
 $st = db()->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
 $st->execute([$email]);
 if ($st->fetch() !== false) {
@@ -30,21 +36,27 @@ if ($st->fetch() !== false) {
 }
 
 $hash = password_hash($password, PASSWORD_DEFAULT);
-$ins  = db()->prepare(
-    'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)'
+$token = bin2hex(random_bytes(32));
+
+$ins = db()->prepare(
+    'INSERT INTO users (name, email, password, role, remember_token, email_verified_at) VALUES (?, ?, ?, ?, ?, NULL)'
 );
-$ins->execute([$name, $email, $hash, 'customer']);
+$ins->execute([$name, $email, $hash, 'customer', $token]);
 
-$user = [
-    'id'       => (int) (db()->lastInsertId()),
-    'name'     => $name,
-    'email'    => $email,
-    'password' => $hash,
-    'role'     => 'customer',
-];
+$userId = (int) db()->lastInsertId();
 
-bb_login_user($user);
-bb_cart_merge_guest_into_user((int) $user['id']);
+$sent = bb_send_verification_email($email, $name, $token);
+if (!$sent) {
+    error_log('Bookbits: verification email failed for user #' . $userId);
+}
 
-header('Location: ' . bb_safe_redirect_target($redirect));
+$_SESSION['flash_success'] = $sent
+    ? 'Account created! Check your inbox to verify your email, then sign in.'
+    : 'Account created, but we could not send the verification email. Please sign in and request a new verification link, or contact support.';
+
+$qs = ['registered' => '1'];
+if ($redirect !== null && $redirect !== '') {
+    $qs['redirect'] = $redirect;
+}
+header('Location: ' . BOOKBITS_BASE . '/login.php?' . http_build_query($qs));
 exit;

@@ -107,25 +107,37 @@ function bb_fetch_new_arrival_books(int $limit = 8): array
 }
 
 /**
+ * Stationery products (stored as is_book_bundle in DB for backwards compatibility).
+ *
  * @return list<array<string,mixed>>
  */
-function bb_fetch_book_bundle_books(int $limit = 8): array
+function bb_fetch_stationery_books(int $limit = 0): array
 {
     if (!bb_table_has_column('books', 'is_book_bundle')) {
         return [];
     }
 
-    $st = db()->prepare(
-        'SELECT b.*, c.slug AS cat_slug, c.name AS cat_name
+    $sql = 'SELECT b.*, c.slug AS cat_slug, c.name AS cat_name
          FROM books b
          INNER JOIN categories c ON c.id = b.category_id
          WHERE b.is_active = 1 AND b.is_book_bundle = 1
-         ORDER BY b.updated_at DESC
-         LIMIT ' . (int) $limit
-    );
+         ORDER BY b.updated_at DESC';
+    if ($limit > 0) {
+        $sql .= ' LIMIT ' . (int) $limit;
+    }
+    $st = db()->prepare($sql);
     $st->execute();
 
     return $st->fetchAll();
+}
+
+/**
+ * @deprecated Use bb_fetch_stationery_books()
+ * @return list<array<string,mixed>>
+ */
+function bb_fetch_book_bundle_books(int $limit = 8): array
+{
+    return bb_fetch_stationery_books($limit);
 }
 
 /**

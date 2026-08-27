@@ -33,9 +33,10 @@ require __DIR__ . '/includes/header.php';
     <h1 class="font-serif text-3xl font-bold text-slate-900">Complete payment with Klump</h1>
     <p class="mt-2 text-sm text-slate-600">Order #<?= (int) $order['id'] ?> · <?= bb_format_money((float) $order['total']) ?></p>
     <?php if (BOOKBITS_KLUMP_PUBLIC_KEY === '') : ?>
-        <div class="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-            Klump public key is not configured. Add it in <code>config/app.php</code>.
+        <div class="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            Klump payments aren’t available right now. Please go back to checkout and choose another payment method.
         </div>
+        <a href="<?= htmlspecialchars(BOOKBITS_BASE . '/checkout.php', ENT_QUOTES, 'UTF-8') ?>" class="mt-4 inline-flex rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">Back to checkout</a>
     <?php else : ?>
         <button id="pay-klump-btn" class="mt-6 inline-flex rounded-xl bg-brand px-6 py-3 text-sm font-bold text-white shadow hover:bg-brand-dark">Pay now</button>
         <p class="mt-3 text-xs text-slate-500">You can close this page to cancel and return to checkout.</p>

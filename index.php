@@ -42,9 +42,9 @@ try {
 }
 
 try {
-    $bookBundleCovers = bb_homepage_book_cards(bb_fetch_book_bundle_books(4));
+    $stationeryCovers = bb_homepage_book_cards(bb_fetch_stationery_books(4));
 } catch (Throwable $e) {
-    $bookBundleCovers = [];
+    $stationeryCovers = [];
 }
 
 $categoryShowcase = BOOKBITS_CATEGORIES;
@@ -62,12 +62,12 @@ require __DIR__ . '/includes/header.php';
 // Hero slides: each has copy + one featured image
 $heroSlides = [
     [
-        'eyebrow' => 'Daily deals',
-        'heading' => "Handpicked Titles\nAt Lower Prices",
-        'sub'     => 'Books marked down on our store today — fiction, faith, business, biography, and more.',
-        'cta_label'=> 'See Daily Deals',
-        'cta_url'  => BOOKBITS_BASE . '/index.php#deals-heading',
-        'badge'    => 'DEALS',
+        'eyebrow' => 'Shop by category',
+        'heading' => "Find the Perfect Book\nIn Any of Our Categories",
+        'sub'     => 'Fiction, faith, business, biography, children’s books, and more — browse what you’re looking for.',
+        'cta_label'=> 'Browse Categories',
+        'cta_url'  => BOOKBITS_BASE . '/index.php#categories-heading',
+        'badge'    => 'SHOP',
         'bg_from'  => '#0f172a',
         'bg_to'    => '#1e3a5f',
         'accent'   => '#38bdf8',
@@ -75,12 +75,12 @@ $heroSlides = [
         'image_alt'=> 'Woman holding a stack of popular books',
     ],
     [
-        'eyebrow' => 'Fresh arrivals',
-        'heading' => "New Books\nJust Landed",
-        'sub'     => 'Explore the latest in Fiction, Memoir, and Leadership.',
-        'cta_label'=> 'Browse New Arrivals',
+        'eyebrow' => 'Books, Bits & Co',
+        'heading' => "Bibles, Journals,\nBooks & Stationery",
+        'sub'     => 'The bookstore for Bibles, journals, books, and stationery — everything you need in one place.',
+        'cta_label'=> 'Visit the Shop',
         'cta_url'  => BOOKBITS_BASE . '/shop.php',
-        'badge'    => 'NEW',
+        'badge'    => 'STORE',
         'bg_from'  => '#172554',
         'bg_to'    => '#1e40af',
         'accent'   => '#7dd3fc',
@@ -88,12 +88,12 @@ $heroSlides = [
         'image_alt'=> 'Reader with a stack of new arrivals',
     ],
     [
-        'eyebrow' => 'Bestsellers',
-        'heading' => "Books That\nChange Lives",
-        'sub'     => 'Our most-loved titles in Business, Faith, and Biography.',
-        'cta_label'=> 'View Bestsellers',
-        'cta_url'  => BOOKBITS_BASE . '/shop.php?cat=biography',
-        'badge'    => 'TOP',
+        'eyebrow' => 'The Open Page',
+        'heading' => "Every Story\nBegins Here",
+        'sub'     => 'Discover curated books, rare finds & timeless reads — delivered to your door.',
+        'cta_label'=> 'Browse the Collection',
+        'cta_url'  => BOOKBITS_BASE . '/shop.php',
+        'badge'    => 'READ',
         'bg_from'  => '#0c1a2e',
         'bg_to'    => '#0e4d8c',
         'accent'   => '#bae6fd',
@@ -366,8 +366,6 @@ $heroSlides = [
             </div>
         </section>
 
-        <?php require __DIR__ . '/includes/banner-editorial.php'; ?>
-
         <!-- Daily Deals -->
         <section class="border-t border-slate-100 bg-gradient-to-b from-[#f0f9ff] to-white py-12 sm:py-14" aria-labelledby="deals-heading">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -472,26 +470,25 @@ $heroSlides = [
             </div>
         </section>
 
-        <!-- Book Bundles -->
-        <section class="border-t border-slate-100 bg-gradient-to-b from-purple-50 to-white py-12 sm:py-14" aria-labelledby="book-bundles-heading">
+        <!-- Stationery -->
+        <section class="border-t border-slate-100 bg-gradient-to-b from-purple-50 to-white py-12 sm:py-14" aria-labelledby="stationery-heading">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div class="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h2 id="book-bundles-heading" class="font-serif text-2xl font-bold text-slate-900 sm:text-3xl">Book Bundles</h2>
-                        <p class="mt-1 text-sm text-slate-500">Special bundle picks curated to read together.</p>
+                        <h2 id="stationery-heading" class="font-serif text-2xl font-bold text-slate-900 sm:text-3xl">Stationery</h2>
+                        <p class="mt-1 text-sm text-slate-500">Journals, pens, and writing essentials for every desk.</p>
                     </div>
+                    <a href="<?= htmlspecialchars(BOOKBITS_BASE . '/stationery.php', ENT_QUOTES, 'UTF-8') ?>" class="text-sm font-semibold text-purple-700 transition hover:text-purple-900">View all stationery &rsaquo;</a>
                 </div>
 
-                <?php if (count($bookBundleCovers) === 0) : ?>
-                    <p class="rounded-xl border border-dashed border-slate-200 bg-white px-6 py-10 text-center text-sm text-slate-600">Mark books as &ldquo;Book bundle&rdquo; in the admin dashboard to show them here.</p>
-                <?php else : ?>
+                <?php if (count($stationeryCovers) > 0) : ?>
                     <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:gap-5">
-                        <?php foreach ($bookBundleCovers as $book) : ?>
+                        <?php foreach ($stationeryCovers as $book) : ?>
                             <a href="<?= htmlspecialchars(BOOKBITS_BASE . '/product.php?id=' . $book['id'], ENT_QUOTES, 'UTF-8') ?>" class="group block">
                                 <div class="relative aspect-[3/4] overflow-hidden rounded-lg bg-slate-100 shadow-sm ring-1 ring-slate-900/5 transition group-hover:-translate-y-1 group-hover:shadow-md">
                                     <img src="<?= htmlspecialchars($book['img'], ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars($book['title'], ENT_QUOTES, 'UTF-8') ?>" class="h-full w-full object-cover transition duration-500 group-hover:scale-105" loading="lazy">
                                     <div class="absolute inset-y-0 left-0 w-1 bg-gradient-to-r from-black/20 to-transparent" aria-hidden="true"></div>
-                                    <span class="absolute left-2 top-2 rounded-full bg-purple-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white shadow">Bundle</span>
+                                    <span class="absolute left-2 top-2 rounded-full bg-purple-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white shadow">Stationery</span>
                                 </div>
                                 <div class="mt-2 px-0.5">
                                     <p class="line-clamp-1 text-xs font-bold text-slate-800 transition group-hover:text-purple-700 sm:text-sm"><?= htmlspecialchars($book['title'], ENT_QUOTES, 'UTF-8') ?></p>

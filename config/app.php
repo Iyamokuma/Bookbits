@@ -25,6 +25,29 @@ if (!function_exists('str_starts_with')) {
         return $needle === '' || strpos($haystack, $needle) === 0;
     }
 }
+if (!function_exists('str_ends_with')) {
+    function str_ends_with(string $haystack, string $needle): bool
+    {
+        if ($needle === '') {
+            return true;
+        }
+
+        return substr($haystack, -strlen($needle)) === $needle;
+    }
+}
+
+// Local secrets first (gitignored) — must load BEFORE any defaults below.
+$appLocal = __DIR__ . '/app.local.php';
+if (is_file($appLocal)) {
+    $local = require $appLocal;
+    if (is_array($local)) {
+        foreach ($local as $const => $value) {
+            if (is_string($const) && $const !== '' && !defined($const)) {
+                define($const, $value);
+            }
+        }
+    }
+}
 
 // Admin dashboard (/admin/login.php) — override in config/app.local.php (not committed).
 if (!defined('BOOKBITS_ADMIN_EMAIL')) {
@@ -118,7 +141,20 @@ if (!defined('BOOKBITS_STORE_EMAIL')) {
     define('BOOKBITS_STORE_EMAIL', 'orders@booksandbits.com.ng');
 }
 
-// Payment gateways: set keys in config/app.local.php (see app.local.php.example).
+// Resend (https://resend.com) — set BOOKBITS_RESEND_API_KEY in config/app.local.php
+if (!defined('BOOKBITS_RESEND_API_KEY')) {
+    define('BOOKBITS_RESEND_API_KEY', '');
+}
+// From address: use a Resend-verified domain in production.
+// Until your domain is verified, Resend allows onboarding@resend.dev (sends only to your Resend account email).
+if (!defined('BOOKBITS_MAIL_FROM_EMAIL')) {
+    define('BOOKBITS_MAIL_FROM_EMAIL', 'onboarding@resend.dev');
+}
+if (!defined('BOOKBITS_MAIL_FROM_NAME')) {
+    define('BOOKBITS_MAIL_FROM_NAME', BOOKBITS_STORE_NAME);
+}
+
+// Payment gateways: defaults only if not set in app.local.php
 if (!defined('BOOKBITS_PAYSTACK_PUBLIC_KEY')) {
     define('BOOKBITS_PAYSTACK_PUBLIC_KEY', '');
 }
@@ -138,16 +174,4 @@ if (!defined('BOOKBITS_KORAPAY_PUBLIC_KEY')) {
 }
 if (!defined('BOOKBITS_KORAPAY_SECRET_KEY')) {
     define('BOOKBITS_KORAPAY_SECRET_KEY', '');
-}
-
-$appLocal = __DIR__ . '/app.local.php';
-if (is_file($appLocal)) {
-    $local = require $appLocal;
-    if (is_array($local)) {
-        foreach ($local as $const => $value) {
-            if (is_string($const) && $const !== '' && !defined($const)) {
-                define($const, $value);
-            }
-        }
-    }
 }

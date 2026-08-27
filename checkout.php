@@ -70,8 +70,11 @@ require __DIR__ . '/includes/header.php';
 
                 <form action="<?= htmlspecialchars($base . '/actions/checkout-submit.php', ENT_QUOTES, 'UTF-8') ?>" method="post" class="mt-8 space-y-8">
                     <div>
-                        <h2 class="text-lg font-semibold text-slate-900">Delivery details</h2>
-                        <p class="mt-1 text-sm text-slate-500">We’ll use this to deliver your books. All fields marked * are required.</p>
+                        <h2 class="text-lg font-semibold text-slate-900">Delivery address (required)</h2>
+                        <p class="mt-1 text-sm text-slate-500">You must provide a complete address before placing an order. We’ll ship your books to this address.</p>
+                        <div class="mt-3 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-950">
+                            <strong>Required:</strong> full name, phone, street address, city, state, postal code, and country.
+                        </div>
                     </div>
 
                     <div class="grid gap-4 sm:grid-cols-2">

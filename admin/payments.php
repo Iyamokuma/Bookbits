@@ -10,11 +10,21 @@ unset($_SESSION['admin_flash']);
 $flashIsError = !empty($_SESSION['admin_flash_error']);
 unset($_SESSION['admin_flash_error']);
 
+$perPage = 5;
+$page = max(1, (int) ($_GET['page'] ?? 1));
+
+$total = (int) db()->query('SELECT COUNT(*) FROM orders')->fetchColumn();
+$totalPages = max(1, (int) ceil($total / $perPage));
+if ($page > $totalPages) {
+    $page = $totalPages;
+}
+$offset = ($page - 1) * $perPage;
+
 $colPca = bb_table_has_column('orders', 'payment_confirmed_at') ? 'o.payment_confirmed_at' : 'NULL AS payment_confirmed_at';
 $colCs = bb_table_has_column('orders', 'checkout_snapshot') ? 'o.checkout_snapshot' : 'NULL AS checkout_snapshot';
 $colPaidAt = bb_table_has_column('payments', 'paid_at') ? 'p.paid_at' : 'NULL AS paid_at';
 
-$rows = db()->query(
+$stOrders = db()->prepare(
     'SELECT o.id AS order_id, o.status, o.total, o.created_at, ' . $colPca . ', ' . $colCs . ',
             o.shipping_name, o.shipping_phone, o.shipping_address, o.shipping_city, o.shipping_state, o.shipping_zip, o.shipping_country, o.notes,
             u.email AS customer, u.name AS customer_name,
@@ -23,8 +33,13 @@ $rows = db()->query(
      INNER JOIN users u ON u.id = o.user_id
      LEFT JOIN payments p ON p.order_id = o.id
      ORDER BY o.created_at DESC
-     LIMIT 100'
-)->fetchAll();
+     LIMIT ' . (int) $perPage . ' OFFSET ' . (int) $offset
+);
+$stOrders->execute();
+$rows = $stOrders->fetchAll();
+
+$rangeStart = $total > 0 ? $offset + 1 : 0;
+$rangeEnd = min($offset + count($rows), $total);
 
 $orderIds = array_values(array_unique(array_map(static fn (array $r): int => (int) $r['order_id'], $rows)));
 $itemsByOrder = [];
@@ -61,8 +76,15 @@ bb_admin_header($pageTitle, 'payments');
             <div class="mb-6 rounded-xl border px-4 py-3 text-sm <?= $flashIsError ? 'border-red-200 bg-red-50 text-red-900' : 'border-emerald-200 bg-emerald-50 text-emerald-900' ?>"><?= htmlspecialchars($flash, ENT_QUOTES, 'UTF-8') ?></div>
         <?php endif; ?>
 
-        <h1 class="text-2xl font-bold text-slate-900">Orders & payments</h1>
-        <p class="text-sm text-slate-600">Customer checkout details (address, phone, notes, books) appear below. After payment is confirmed, a snapshot is stored on the order for your records.</p>
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900">Orders & payments</h1>
+                <p class="text-sm text-slate-600">Customer checkout details appear below<?= $total > 0 ? ' — ' . $total . ' order' . ($total === 1 ? '' : 's') . ' total' : '' ?>.</p>
+            </div>
+            <?php if ($totalPages > 1) : ?>
+                <p class="text-xs font-semibold text-slate-500">Page <?= $page ?> of <?= $totalPages ?></p>
+            <?php endif; ?>
+        </div>
 
         <div class="mt-6 space-y-6">
             <?php foreach ($rows as $r) :
@@ -87,7 +109,7 @@ bb_admin_header($pageTitle, 'payments');
                     $snapDecoded = is_array($sd) ? $sd : null;
                 }
                 ?>
-                <article class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <article id="order-<?= $oid ?>" class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                     <div class="flex flex-col gap-3 border-b border-slate-100 bg-slate-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <span class="font-mono text-lg font-bold text-slate-900">#<?= $oid ?></span>
@@ -172,10 +194,57 @@ bb_admin_header($pageTitle, 'payments');
                             </ul>
                         <?php endif; ?>
                     </div>
+                    <div class="border-t border-slate-100 px-4 py-4">
+                        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500">Order pipeline &amp; customer email</h2>
+                        <p class="mt-1 text-xs text-slate-500">
+                            Customer on file:
+                            <strong class="text-slate-800"><?= htmlspecialchars((string) $r['customer'], ENT_QUOTES, 'UTF-8') ?></strong>
+                            — emails go here unless you override below.
+                        </p>
+                        <p class="mt-1 text-xs text-slate-500">Flow after payment: <strong>Processing</strong> (confirmed) → <strong>Shipped</strong> (auto-emails customer with their delivery address) → <strong>Delivered</strong>.</p>
+
+                        <form action="<?= htmlspecialchars(BOOKBITS_BASE . '/admin/order-send-update.php', ENT_QUOTES, 'UTF-8') ?>" method="post" class="mt-4 space-y-3">
+                            <input type="hidden" name="order_id" value="<?= $oid ?>">
+                            <input type="hidden" name="page" value="<?= (int) $page ?>">
+                            <div class="grid gap-3 sm:grid-cols-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600">Move status to</label>
+                                    <select name="status" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm">
+                                        <option value="">Keep current (<?= htmlspecialchars((string) $r['status'], ENT_QUOTES, 'UTF-8') ?>)</option>
+                                        <option value="processing">Processing / confirmed</option>
+                                        <option value="shipped">Shipped (emails address + tracking)</option>
+                                        <option value="delivered">Delivered</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600">Tracking number (optional)</label>
+                                    <input type="text" name="tracking_number" maxlength="120" placeholder="Courier tracking ID" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600">Send to email</label>
+                                    <input type="email" name="custom_email" value="<?= htmlspecialchars((string) $r['customer'], ENT_QUOTES, 'UTF-8') ?>" required placeholder="customer@email.com" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm">
+                                    <p class="mt-1 text-[11px] text-slate-400">Pre-filled with the customer’s email — change only if you need another inbox.</p>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600">Email subject (for custom message)</label>
+                                <input type="text" name="subject" maxlength="180" placeholder="Update on your order #<?= $oid ?>" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600">Custom message (optional if you only change status)</label>
+                                <textarea name="message" rows="3" placeholder="Add a personal note for the customer…" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"></textarea>
+                            </div>
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <p class="text-[11px] text-slate-500">Choosing <strong>Shipped</strong> automatically emails that the order is on its way.</p>
+                                <button type="submit" class="rounded-xl bg-brand px-4 py-2 text-sm font-bold text-white shadow hover:bg-brand-dark">Update &amp; send</button>
+                            </div>
+                        </form>
+                    </div>
                     <div class="flex flex-wrap items-center justify-end gap-3 border-t border-slate-100 bg-slate-50/50 px-4 py-3">
                         <?php if ($canMarkDelivered) : ?>
-                            <form action="<?= htmlspecialchars(BOOKBITS_BASE . '/admin/order-mark-delivered.php', ENT_QUOTES, 'UTF-8') ?>" method="post" class="inline" onsubmit="return confirm('Mark order #<?= $oid ?> as delivered?');">
+                            <form action="<?= htmlspecialchars(BOOKBITS_BASE . '/admin/order-mark-delivered.php', ENT_QUOTES, 'UTF-8') ?>" method="post" class="inline" onsubmit="return confirm('Mark order #<?= $oid ?> as delivered and email the customer?');">
                                 <input type="hidden" name="order_id" value="<?= $oid ?>">
+                                <input type="hidden" name="page" value="<?= (int) $page ?>">
                                 <button type="submit" class="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow hover:bg-emerald-700">Mark delivered</button>
                             </form>
                         <?php elseif ($payOk && (string) $r['status'] === 'delivered') : ?>
@@ -188,5 +257,30 @@ bb_admin_header($pageTitle, 'payments');
                 <p class="rounded-2xl border border-slate-200 bg-white py-12 text-center text-slate-500">No orders yet.</p>
             <?php endif; ?>
         </div>
+
+        <?php if ($total > 0) : ?>
+            <div class="mt-6 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+                <p class="text-sm text-slate-600">
+                    Showing <?= $rangeStart ?>–<?= $rangeEnd ?> of <?= $total ?>
+                    <?php if ($totalPages > 1) : ?>
+                        <span class="text-slate-400">· Page <?= $page ?> of <?= $totalPages ?></span>
+                    <?php endif; ?>
+                </p>
+                <?php if ($totalPages > 1) : ?>
+                    <div class="flex items-center gap-2">
+                        <?php if ($page > 1) : ?>
+                            <a href="<?= htmlspecialchars(BOOKBITS_BASE . '/admin/payments.php?page=' . ($page - 1), ENT_QUOTES, 'UTF-8') ?>" class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-brand/30 hover:text-brand">Previous</a>
+                        <?php else : ?>
+                            <span class="rounded-lg border border-slate-100 bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-400">Previous</span>
+                        <?php endif; ?>
+                        <?php if ($page < $totalPages) : ?>
+                            <a href="<?= htmlspecialchars(BOOKBITS_BASE . '/admin/payments.php?page=' . ($page + 1), ENT_QUOTES, 'UTF-8') ?>" class="rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-brand-dark">Next</a>
+                        <?php else : ?>
+                            <span class="rounded-lg border border-slate-100 bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-400">Next</span>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
 
 <?php bb_admin_footer(); ?>

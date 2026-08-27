@@ -19,7 +19,11 @@ if ($from !== '' && preg_match('/^[a-z]+$/', $from)) {
 }
 $registerHref = BOOKBITS_BASE . '/register.php' . ($registerQs !== [] ? '?' . http_build_query($registerQs) : '');
 $err      = $_SESSION['flash_error'] ?? '';
-unset($_SESSION['flash_error']);
+$okMsg    = $_SESSION['flash_success'] ?? '';
+unset($_SESSION['flash_error'], $_SESSION['flash_success']);
+if ($okMsg === '' && isset($_GET['registered'])) {
+    $okMsg = 'Account created! Check your email to verify, then sign in.';
+}
 
 $pageTitle = 'Sign in — Bookbits';
 require __DIR__ . '/includes/header.php';
@@ -37,6 +41,10 @@ require __DIR__ . '/includes/header.php';
                 </div>
             <?php endif; ?>
 
+            <?php if ($okMsg !== '') : ?>
+                <div class="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"><?= htmlspecialchars($okMsg, ENT_QUOTES, 'UTF-8') ?></div>
+            <?php endif; ?>
+
             <?php if ($err !== '') : ?>
                 <div class="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"><?= htmlspecialchars($err, ENT_QUOTES, 'UTF-8') ?></div>
             <?php endif; ?>
@@ -48,7 +56,10 @@ require __DIR__ . '/includes/header.php';
                     <input type="email" id="email" name="email" required autocomplete="email" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm shadow-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20">
                 </div>
                 <div>
-                    <label for="password" class="block text-sm font-medium text-slate-700">Password</label>
+                    <div class="flex items-center justify-between gap-2">
+                        <label for="password" class="block text-sm font-medium text-slate-700">Password</label>
+                        <a href="<?= htmlspecialchars(BOOKBITS_BASE . '/forgot-password.php', ENT_QUOTES, 'UTF-8') ?>" class="text-xs font-semibold text-brand hover:text-brand-dark">Forgot password?</a>
+                    </div>
                     <input type="password" id="password" name="password" required autocomplete="current-password" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm shadow-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20">
                 </div>
                 <button type="submit" class="w-full rounded-xl bg-brand py-3 text-sm font-bold text-white shadow-md transition hover:bg-brand-dark">Sign in</button>

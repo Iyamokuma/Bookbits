@@ -41,6 +41,7 @@
                     <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500">Shop</h2>
                     <ul class="mt-4 space-y-3 text-sm">
                         <li><a href="<?= htmlspecialchars($bbFooterBase . '/shop.php', ENT_QUOTES, 'UTF-8') ?>" class="text-slate-300 transition hover:text-white">All books</a></li>
+                        <li><a href="<?= htmlspecialchars($bbFooterBase . '/stationery.php', ENT_QUOTES, 'UTF-8') ?>" class="text-slate-300 transition hover:text-white">Stationery</a></li>
                         <li><a href="<?= htmlspecialchars($bbFooterBase . '/blog.php', ENT_QUOTES, 'UTF-8') ?>" class="text-slate-300 transition hover:text-white">Blog</a></li>
                         <li><a href="<?= htmlspecialchars($bbFooterBase . '/cart.php', ENT_QUOTES, 'UTF-8') ?>" class="text-slate-300 transition hover:text-white">Cart</a></li>
                     </ul>
@@ -56,9 +57,9 @@
                     <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500">Help</h2>
                     <ul class="mt-4 space-y-3 text-sm">
                         <li><a href="tel:<?= htmlspecialchars(bb_store_phone_tel(), ENT_QUOTES, 'UTF-8') ?>" class="text-slate-300 transition hover:text-white"><?= htmlspecialchars(bb_store_phone_display(), ENT_QUOTES, 'UTF-8') ?></a></li>
-                        <li><a href="#" class="text-slate-300 transition hover:text-white">Shipping &amp; returns</a></li>
-                        <li><a href="#" class="text-slate-300 transition hover:text-white">Privacy policy</a></li>
-                        <li><a href="#" class="text-slate-300 transition hover:text-white">Terms of use</a></li>
+                        <li><a href="<?= htmlspecialchars($bbFooterBase . '/shipping.php', ENT_QUOTES, 'UTF-8') ?>" class="text-slate-300 transition hover:text-white">Shipping &amp; returns</a></li>
+                        <li><a href="<?= htmlspecialchars($bbFooterBase . '/privacy.php', ENT_QUOTES, 'UTF-8') ?>" class="text-slate-300 transition hover:text-white">Privacy policy</a></li>
+                        <li><a href="<?= htmlspecialchars($bbFooterBase . '/terms.php', ENT_QUOTES, 'UTF-8') ?>" class="text-slate-300 transition hover:text-white">Terms of use</a></li>
                     </ul>
                 </div>
             </div>

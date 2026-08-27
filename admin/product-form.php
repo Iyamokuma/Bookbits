@@ -320,7 +320,7 @@ unset($_SESSION['admin_flash_error']);
                 <strong>Homepage flags are not fully active in the database yet.</strong>
                 Run the latest statements at the end of <code class="rounded bg-white px-1 py-0.5 text-xs">database/schema.sql</code> to add
                 <code class="rounded bg-white px-1 py-0.5 text-xs">is_new_arrival</code> and
-                <code class="rounded bg-white px-1 py-0.5 text-xs">is_book_bundle</code>.
+                <code class="rounded bg-white px-1 py-0.5 text-xs">is_book_bundle</code> (Stationery flag).
             </div>
         <?php endif; ?>
 
@@ -416,7 +416,7 @@ unset($_SESSION['admin_flash_error']);
                         <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="is_new_arrival" value="1" <?= $book && (int) ($book['is_new_arrival'] ?? 0) ? ' checked' : '' ?>> New arrival</label>
                     <?php endif; ?>
                     <?php if ($bookBundleDbReady) : ?>
-                        <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="is_book_bundle" value="1" <?= $book && (int) ($book['is_book_bundle'] ?? 0) ? ' checked' : '' ?>> Book bundle</label>
+                        <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="is_book_bundle" value="1" <?= $book && (int) ($book['is_book_bundle'] ?? 0) ? ' checked' : '' ?>> Stationery</label>
                     <?php endif; ?>
                     <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="is_active" value="1" <?= !$book || (int) $book['is_active'] ? ' checked' : '' ?>> Active (visible in shop)</label>
                 </div>
