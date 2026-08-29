@@ -1,3 +1,23 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.vercel/
+
+# Local secrets & environment overrides
+.env
+.env.*
+!.env.example
+
+# Runtime uploads are not tracked, except the product covers migrated from the
+# old PHP site — git is currently their only backup. The contents are excluded
+# rather than the directory itself, because git will not descend into an
+# ignored directory to apply the negations below.
+public/uploads/*
+!public/uploads/covers/
+!public/uploads/blog/
+
 # Archives & backups
 *.zip
 *.tar
@@ -10,26 +30,17 @@
 agent-transcripts/
 mcps/
 *.cursor-*
-
-# Local secrets & environment overrides
-.env
-.env.*
-config/database.local.php
-config/app.local.php
-
-# OS & editor
-.DS_Store
-Thumbs.db
 .idea/
 .vscode/
 *.swp
 *.swo
 
+# OS
+.DS_Store
+Thumbs.db
+
 # Logs & temp
 *.log
+npm-debug.log*
 tmp/
 temp/
-
-# Uploaded user content (keep folder structure via .gitkeep if needed)
-assets/uploads/**/*
-!assets/uploads/**/.gitkeep
