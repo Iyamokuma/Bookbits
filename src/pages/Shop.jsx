@@ -1,11 +1,12 @@
+import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import BookCard from '../components/BookCard';
-import { Spinner, EmptyState, Alert } from '../components/ui';
+import { Spinner, EmptyState, Alert, inputClass } from '../components/ui';
 import { useFetch } from '../lib/useFetch';
 import { useApp } from '../context/AppContext';
 
 export default function Shop() {
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const { categories } = useApp();
 
   const cat = params.get('cat') || '';
@@ -15,6 +16,17 @@ export default function Shop() {
   if (q) query.set('q', q);
 
   const { data, loading, error } = useFetch(`/books?${query}`);
+
+  const [term, setTerm] = useState(q);
+  useEffect(() => setTerm(q), [q]);
+
+  const submitSearch = (e) => {
+    e.preventDefault();
+    const next = new URLSearchParams();
+    if (cat) next.set('cat', cat);
+    if (term.trim()) next.set('q', term.trim());
+    setParams(next);
+  };
 
   const heading = data?.category?.name || (q ? `Results for “${q}”` : 'All books');
 
@@ -27,6 +39,41 @@ export default function Shop() {
             {data.books.length} {data.books.length === 1 ? 'title' : 'titles'}
           </p>
         )}
+
+        <form onSubmit={submitSearch} role="search" className="mt-5 flex max-w-lg gap-2">
+          <label className="sr-only" htmlFor="q-shop">Search books</label>
+          <input
+            id="q-shop"
+            type="search"
+            value={term}
+            onChange={(e) => setTerm(e.target.value)}
+            placeholder="Search by title, author or ISBN…"
+            className={inputClass}
+          />
+          <button type="submit"
+                  className="shrink-0 rounded-lg bg-brand px-5 text-sm font-semibold text-white transition hover:bg-brand-dark">
+            Search
+          </button>
+        </form>
+
+        {/* The sidebar is desktop-only, so small screens filter from here. */}
+        <div className="mt-4 flex gap-2 overflow-x-auto pb-1 lg:hidden">
+          <Link
+            to="/shop"
+            className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium ${!cat ? 'border-brand bg-brand text-white' : 'border-slate-200 bg-white text-slate-600'}`}
+          >
+            All
+          </Link>
+          {categories.map((c) => (
+            <Link
+              key={c.slug}
+              to={`/shop?cat=${c.slug}`}
+              className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium ${cat === c.slug ? 'border-brand bg-brand text-white' : 'border-slate-200 bg-white text-slate-600'}`}
+            >
+              {c.name}
+            </Link>
+          ))}
+        </div>
       </div>
 
       <div className="grid gap-8 lg:grid-cols-[13rem_1fr]">

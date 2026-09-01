@@ -7,8 +7,10 @@ import { getOrder } from '../lib/orders.js';
 import sessionRoutes from './session.js';
 import catalogRoutes from './catalog.js';
 import cartRoutes from './cart.js';
+import wishlistRoutes from './wishlist.js';
 import authRoutes from './auth.js';
 import orderRoutes from './orders.js';
+import contactRoutes from './contact.js';
 import adminRoutes from './admin.js';
 import { asyncRoute, notFound, ApiError } from '../lib/http.js';
 
@@ -17,8 +19,10 @@ const router = Router();
 router.use(sessionRoutes);
 router.use(catalogRoutes);
 router.use(cartRoutes);
+router.use(wishlistRoutes);
 router.use(authRoutes);
 router.use(orderRoutes);
+router.use(contactRoutes);
 router.use(adminRoutes);
 
 router.get('/legal/:slug', (req, res, next) => {

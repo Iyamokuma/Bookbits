@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
 import { formatMoney } from '../lib/format';
 import { useApp } from '../context/AppContext';
+import { HeartIcon } from './icons';
 
 export default function BookCard({ book }) {
-  const { setCartCount, notify } = useApp();
+  const { setCartCount, notify, wishlist, toggleWishlist } = useApp();
   const [adding, setAdding] = useState(false);
+  const saved = wishlist.includes(book.id);
 
   const addToCart = async () => {
     setAdding(true);
@@ -22,7 +24,7 @@ export default function BookCard({ book }) {
   };
 
   return (
-    <article className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:shadow-lg hover:shadow-slate-200/60">
+    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:shadow-lg hover:shadow-slate-200/60">
       <Link to={`/book/${book.id}`} className="relative block aspect-[3/4] overflow-hidden bg-slate-100">
         <img
           src={book.coverUrl}
@@ -40,6 +42,19 @@ export default function BookCard({ book }) {
           </span>
         ) : null}
       </Link>
+
+      <button
+        type="button"
+        onClick={() => toggleWishlist(book.id)}
+        aria-pressed={saved}
+        aria-label={saved ? `Remove ${book.title} from your wishlist` : `Save ${book.title} to your wishlist`}
+        title={saved ? 'Saved — click to remove' : 'Save for later'}
+        className={`absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-white/90 shadow-sm ring-1 ring-slate-900/5 backdrop-blur transition hover:bg-white ${
+          saved ? 'text-rose-600' : 'text-slate-400 hover:text-rose-500'
+        }`}
+      >
+        <HeartIcon filled={saved} />
+      </button>
 
       <div className="flex flex-1 flex-col p-4">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-600">

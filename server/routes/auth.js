@@ -160,6 +160,26 @@ router.post(
   })
 );
 
+/** Send the verification link again, for signup emails that never arrived. */
+router.post(
+  '/auth/resend-verification',
+  asyncRoute(async (req, res) => {
+    if (!req.user) throw unauthorized('Please sign in to resend the verification email.');
+    if (req.user.email_verified_at) {
+      return res.json({ message: 'Your email address is already verified.' });
+    }
+
+    const token = randomToken(32);
+    await query('UPDATE users SET remember_token = $1 WHERE id = $2', [token, req.user.id]);
+    const mail = await sendVerificationEmail(req.user, token);
+
+    if (!mail.ok) {
+      throw badRequest('We could not send the email just now. Please try again in a few minutes.');
+    }
+    res.json({ message: `Verification link sent to ${req.user.email}.` });
+  })
+);
+
 router.post('/auth/logout', (req, res) => {
   req.session.destroy(() => res.json({ ok: true }));
 });

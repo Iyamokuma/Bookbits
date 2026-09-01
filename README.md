@@ -11,7 +11,7 @@ Online bookstore — React single-page app on an Express JSON API, backed by Sup
 | Database  | Supabase (PostgreSQL) via `pg`                     |
 | Sessions  | `express-session` + `connect-pg-simple`            |
 | Email     | Resend                                             |
-| Payments  | Paystack, Klump, Korapay                           |
+| Payments  | Paystack, Klump, Korapay (each shown only when its keys are set) |
 
 ## Layout
 
@@ -87,6 +87,11 @@ Two things to know about how Vercel runs Express:
 
 If you change the deployment URL, update the webhook endpoint in each payment
 gateway's dashboard to `<BASE_URL>/api/payment/webhook?gateway=<name>`.
+
+Checkout only lists gateways whose keys are present, and rejects any other
+choice server-side. Adding Klump or Korapay keys makes them appear with no code
+change; removing keys hides them again. With no gateway configured at all,
+checkout says so plainly instead of failing after the order is created.
 
 ## Environment
 

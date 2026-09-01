@@ -289,6 +289,15 @@ ALTER TABLE users ALTER COLUMN password DROP NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_id ON users (google_id)
     WHERE google_id IS NOT NULL;
 
+-- Newsletter sign-ups from the footer form. Unsubscribing keeps the row so a
+-- later re-subscribe does not silently re-send the welcome email.
+CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+    id              INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    email           VARCHAR(191) NOT NULL UNIQUE,
+    created_at      TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    unsubscribed_at TIMESTAMPTZ  NULL
+);
+
 -- ------------------------------------------------------------
 -- SEED — default categories
 -- ------------------------------------------------------------

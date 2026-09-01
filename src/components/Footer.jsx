@@ -1,6 +1,52 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import { api } from '../lib/api';
 import { FacebookIcon, InstagramIcon, WhatsAppIcon } from './icons';
+
+function NewsletterForm() {
+  const { notify } = useApp();
+  const [email, setEmail] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      const res = await api.post('/newsletter', { email });
+      notify(res.message);
+      setEmail('');
+    } catch (err) {
+      notify(err.message, 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <form onSubmit={submit} className="mt-4">
+      <label className="sr-only" htmlFor="newsletter-email">Email address</label>
+      <div className="flex gap-2">
+        <input
+          id="newsletter-email"
+          type="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          className="min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+        />
+        <button
+          type="submit"
+          disabled={busy}
+          className="shrink-0 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-dark disabled:opacity-60"
+        >
+          {busy ? '…' : 'Join'}
+        </button>
+      </div>
+    </form>
+  );
+}
 
 const SHOP = [
   { to: '/shop', label: 'All books' },
@@ -53,6 +99,14 @@ export default function Footer() {
                   <WhatsAppIcon className="h-5 w-5 shrink-0" /> Message us on WhatsApp
                 </a>
               )}
+
+              <div className="mt-7 max-w-sm">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">Book Club &amp; newsletter</h2>
+                <p className="mt-2 text-sm text-slate-400">
+                  New arrivals, promotions and reading picks. Unsubscribe any time.
+                </p>
+                <NewsletterForm />
+              </div>
             </div>
 
             <div>
@@ -68,7 +122,10 @@ export default function Footer() {
               <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">Account</h2>
               <ul className="mt-4 space-y-3 text-sm">
                 {user ? (
-                  <li><Link to="/account" className="text-slate-300 transition hover:text-white">My orders</Link></li>
+                  <>
+                    <li><Link to="/account" className="text-slate-300 transition hover:text-white">My orders</Link></li>
+                    <li><Link to="/wishlist" className="text-slate-300 transition hover:text-white">My wishlist</Link></li>
+                  </>
                 ) : (
                   <>
                     <li><Link to="/login" className="text-slate-300 transition hover:text-white">Sign in</Link></li>

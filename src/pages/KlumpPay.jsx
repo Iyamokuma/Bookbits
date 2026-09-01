@@ -42,7 +42,7 @@ export default function KlumpPay() {
             amount: data.order.total,
             currency: data.currency,
             merchant_reference: `klump_${data.order.id}`,
-            redirect_url: `${window.location.origin}/payment/callback?gateway=klump&order=${data.order.id}`,
+            redirect_url: `${window.location.origin}/api/payment/callback?gateway=klump&order=${data.order.id}`,
             meta_data: { order_id: data.order.id },
             customer: {
               email: data.customer?.email,
@@ -50,7 +50,10 @@ export default function KlumpPay() {
             },
           },
           onSuccess: () => {
-            window.location.href = `/payment/callback?gateway=klump&order=${data.order.id}`;
+            // The server callback verifies the charge and fulfils the order
+            // before redirecting on to the result page, so this must not point
+            // at the SPA route directly.
+            window.location.href = `/api/payment/callback?gateway=klump&order=${data.order.id}`;
           },
           onError: () => {
             window.location.href = `/payment/result?status=failed&order=${data.order.id}`;

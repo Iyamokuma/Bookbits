@@ -9,6 +9,18 @@ const BOOK_SELECT = `
 const FALLBACK_COVER =
   'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=400&q=80';
 
+/**
+ * Resolve any stored upload reference (blog covers and the like) to a URL the
+ * browser can load. Relative paths are made absolute so they don't resolve
+ * against the current route.
+ */
+export function mediaUrl(value) {
+  const v = String(value || '').trim();
+  if (v === '') return null;
+  if (/^https?:\/\//i.test(v)) return v;
+  return '/' + v.replace(/^\/+/, '');
+}
+
 /** Resolve a stored cover_image value to a browser-usable URL. */
 export function bookCoverUrl(row) {
   const c = String(row?.cover_image || '').trim();

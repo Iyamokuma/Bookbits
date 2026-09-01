@@ -11,20 +11,42 @@ export default function AdminCategories() {
   const { data, loading, error, reload } = useFetch(`/admin/categories?page=${page}`);
   const { notify } = useApp();
 
-  const [form, setForm] = useState({ name: '', slug: '', description: '', sortOrder: '0' });
+  const BLANK = { name: '', slug: '', description: '', sortOrder: '0', isActive: true };
+  const [form, setForm] = useState(BLANK);
+  const [editing, setEditing] = useState(null);
   const [formError, setFormError] = useState(null);
   const [busy, setBusy] = useState(false);
 
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
-  const add = async (e) => {
+  const startEdit = (c) => {
+    setEditing(c.id);
+    setFormError(null);
+    setForm({
+      name: c.name,
+      slug: c.slug,
+      description: c.description || '',
+      sortOrder: String(c.sortOrder ?? 0),
+      isActive: c.isActive !== false,
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditing(null);
+    setFormError(null);
+    setForm(BLANK);
+  };
+
+  const save = async (e) => {
     e.preventDefault();
     setBusy(true);
     setFormError(null);
     try {
-      const res = await api.post('/admin/categories', form);
+      const res = editing
+        ? await api.patch(`/admin/categories/${editing}`, form)
+        : await api.post('/admin/categories', form);
       notify(res.message);
-      setForm({ name: '', slug: '', description: '', sortOrder: '0' });
+      cancelEdit();
       reload();
     } catch (err) {
       setFormError(err.message);
@@ -70,6 +92,7 @@ export default function AdminCategories() {
                       <th className="px-5 py-3 font-semibold">Name</th>
                       <th className="px-5 py-3 font-semibold">Address</th>
                       <th className="px-5 py-3 font-semibold">Products</th>
+                      <th className="px-5 py-3 font-semibold">Visible</th>
                       <th className="px-5 py-3" />
                     </tr>
                   </thead>
@@ -79,7 +102,18 @@ export default function AdminCategories() {
                         <td className="px-5 py-3.5 font-medium text-slate-900">{c.name}</td>
                         <td className="px-5 py-3.5 font-mono text-xs text-slate-500">/{c.slug}</td>
                         <td className="px-5 py-3.5 text-slate-600">{c.bookCount}</td>
+                        <td className="px-5 py-3.5">
+                          <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${c.isActive === false ? 'bg-slate-100 text-slate-500' : 'bg-emerald-50 text-emerald-700'}`}>
+                            {c.isActive === false ? 'Hidden' : 'Visible'}
+                          </span>
+                        </td>
                         <td className="px-5 py-3.5 text-right">
+                          <button
+                            onClick={() => startEdit(c)}
+                            className="mr-3 text-xs font-semibold text-brand-700 hover:underline"
+                          >
+                            Edit
+                          </button>
                           <button
                             onClick={() => remove(c)}
                             disabled={c.bookCount > 0}
@@ -100,8 +134,10 @@ export default function AdminCategories() {
           )}
         </div>
 
-        <form onSubmit={add} className="h-fit rounded-2xl border border-slate-200 bg-white p-5">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900">Add a category</h2>
+        <form onSubmit={save} className="h-fit rounded-2xl border border-slate-200 bg-white p-5">
+          <h2 className="mb-4 text-sm font-semibold text-slate-900">
+            {editing ? 'Edit category' : 'Add a category'}
+          </h2>
 
           {formError && <div className="mb-4"><Alert>{formError}</Alert></div>}
 
@@ -118,6 +154,15 @@ export default function AdminCategories() {
             <Field label="Sort order">
               <input type="number" className={inputClass} value={form.sortOrder} onChange={set('sortOrder')} />
             </Field>
+            <label className="flex items-center gap-2.5 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                checked={form.isActive}
+                onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))}
+                className="h-4 w-4 rounded accent-brand-700"
+              />
+              Show this category in the shop
+            </label>
           </div>
 
           <button
@@ -125,8 +170,18 @@ export default function AdminCategories() {
             disabled={busy}
             className="mt-5 h-11 w-full rounded-lg bg-brand-700 text-sm font-semibold text-white hover:bg-brand-800 disabled:opacity-60"
           >
-            {busy ? 'Adding…' : 'Add category'}
+            {busy ? 'Saving…' : editing ? 'Save changes' : 'Add category'}
           </button>
+
+          {editing && (
+            <button
+              type="button"
+              onClick={cancelEdit}
+              className="mt-2 h-10 w-full rounded-lg border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Cancel
+            </button>
+          )}
         </form>
       </div>
     </div>

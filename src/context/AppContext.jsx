@@ -29,6 +29,7 @@ export function AppProvider({ children }) {
   const [store, setStore] = useState(DEFAULT_STORE);
   const [categories, setCategories] = useState([]);
   const [googleClientId, setGoogleClientId] = useState('');
+  const [wishlist, setWishlist] = useState([]);
   const [ready, setReady] = useState(false);
   const [toast, setToast] = useState(null);
 
@@ -62,11 +63,45 @@ export function AppProvider({ children }) {
     })();
   }, [loadSession]);
 
+  // Saved-book ids, so every card can show its state without its own request.
+  // Signed-out visitors get an empty list rather than an error.
+  useEffect(() => {
+    if (!user) {
+      setWishlist([]);
+      return;
+    }
+    api.get('/wishlist/ids').then(setWishlist).catch(() => setWishlist([]));
+  }, [user]);
+
   const notify = useCallback((message, tone = 'success') => {
     setToast({ message, tone, id: Date.now() });
   }, []);
 
   const dismissToast = useCallback(() => setToast(null), []);
+
+  /** Save or unsave a book, updating the local list optimistically. */
+  const toggleWishlist = useCallback(
+    async (bookId) => {
+      if (!user) {
+        notify('Please sign in to save books.', 'info');
+        return false;
+      }
+      const saved = wishlist.includes(bookId);
+      setWishlist((ids) => (saved ? ids.filter((id) => id !== bookId) : [...ids, bookId]));
+      try {
+        const res = saved
+          ? await api.delete(`/wishlist/${bookId}`)
+          : await api.post('/wishlist', { bookId });
+        notify(res.message);
+        return !saved;
+      } catch (err) {
+        setWishlist((ids) => (saved ? [...ids, bookId] : ids.filter((id) => id !== bookId)));
+        notify(err.message, 'error');
+        return saved;
+      }
+    },
+    [user, wishlist, notify]
+  );
 
   const value = useMemo(
     () => ({
@@ -79,6 +114,8 @@ export function AppProvider({ children }) {
       store,
       categories,
       googleClientId,
+      wishlist,
+      toggleWishlist,
       ready,
       toast,
       notify,
@@ -87,7 +124,7 @@ export function AppProvider({ children }) {
     }),
     [
       user, isAdmin, cartCount, store, categories, googleClientId,
-      ready, toast, notify, dismissToast, loadSession,
+      wishlist, toggleWishlist, ready, toast, notify, dismissToast, loadSession,
     ]
   );
 

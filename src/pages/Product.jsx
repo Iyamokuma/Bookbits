@@ -4,13 +4,14 @@ import BookCard from '../components/BookCard';
 import { Spinner, EmptyState, Alert } from '../components/ui';
 import { useFetch } from '../lib/useFetch';
 import { useApp } from '../context/AppContext';
+import { HeartIcon } from '../components/icons';
 import { api } from '../lib/api';
 import { formatMoney } from '../lib/format';
 
 export default function Product() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { setCartCount, notify } = useApp();
+  const { setCartCount, notify, wishlist, toggleWishlist } = useApp();
   const { data, loading, error } = useFetch(`/books/${id}`);
 
   const [coverType, setCoverType] = useState('paperback');
@@ -27,6 +28,7 @@ export default function Product() {
   }
 
   const { book, related } = data;
+  const saved = wishlist.includes(book.id);
   const price = book.hasCoverOptions
     ? coverType === 'hardcover'
       ? book.hardcoverPrice
@@ -152,6 +154,18 @@ export default function Product() {
                 className="h-11 rounded-lg border border-brand-700 px-7 text-sm font-semibold text-brand-700 hover:bg-brand-50 disabled:opacity-60"
               >
                 Buy now
+              </button>
+              <button
+                onClick={() => toggleWishlist(book.id)}
+                aria-pressed={saved}
+                className={`inline-flex h-11 items-center gap-2 rounded-lg border px-5 text-sm font-semibold transition ${
+                  saved
+                    ? 'border-rose-200 bg-rose-50 text-rose-600'
+                    : 'border-slate-300 text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <HeartIcon filled={saved} />
+                {saved ? 'Saved' : 'Save'}
               </button>
             </div>
           )}

@@ -295,7 +295,7 @@ function CoverGrid({ books, badge, badgeClass, hoverClass }) {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:gap-5">
       {books.map((book) => (
-        <Link key={book.id} to={`/product/${book.id}`} className="group block">
+        <Link key={book.id} to={`/book/${book.id}`} className="group block">
           <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-slate-100 shadow-sm ring-1 ring-slate-900/5 transition group-hover:-translate-y-1 group-hover:shadow-md">
             <img src={book.coverUrl} alt={book.title} loading="lazy"
                  className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
@@ -321,6 +321,7 @@ const EmptyNote = ({ children }) => (
 export default function Home() {
   const { data, loading } = useFetch('/home');
 
+  const featured = (data?.featured || []).slice(0, 4);
   const deals = (data?.deals || []).slice(0, 4);
   const newArrivals = (data?.newArrivals || []).slice(0, 4);
   const stationery = (data?.stationery || []).slice(0, 4);
@@ -329,6 +330,19 @@ export default function Home() {
     <>
       <Hero />
       <CategoryStrip />
+
+      {/* Featured — only shown once the admin has flagged something */}
+      {featured.length > 0 && (
+        <section className="border-t border-slate-100 bg-white py-12 sm:py-14" aria-labelledby="featured-heading">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mb-8">
+              <h2 id="featured-heading" className="font-serif text-2xl font-bold text-slate-900 sm:text-3xl">Featured</h2>
+              <p className="mt-1 text-sm text-slate-500">Our booksellers' current picks.</p>
+            </div>
+            <CoverGrid books={featured} badge="Featured" badgeClass="bg-brand-700" hoverClass="group-hover:text-brand-700" />
+          </div>
+        </section>
+      )}
 
       {/* Daily Deals */}
       <section className="border-t border-slate-100 bg-gradient-to-b from-[#eff5ff] to-white py-12 sm:py-14" aria-labelledby="deals-heading">

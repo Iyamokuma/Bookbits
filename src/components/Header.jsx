@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import { api } from '../lib/api';
 import {
   PhoneIcon, FacebookIcon, InstagramIcon, WhatsAppIcon, CartIcon, UserIcon,
-  SearchIcon, HomeIcon, BookIcon, PencilIcon, NewspaperIcon, MenuIcon, CloseIcon,
+  SearchIcon, HomeIcon, BookIcon, PencilIcon, NewspaperIcon, MenuIcon, CloseIcon, HeartIcon,
 } from './icons';
 
 const NAV = [
@@ -126,6 +126,24 @@ export default function Header() {
             <Link to="/shop" className="text-sm font-medium text-slate-700 transition hover:text-brand">Shop</Link>
           </nav>
 
+          <form onSubmit={search} role="search" className="hidden min-w-0 flex-1 md:flex md:max-w-xs lg:max-w-sm">
+            <div className="flex w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm focus-within:border-brand/40 focus-within:ring-2 focus-within:ring-brand/20">
+              <label className="sr-only" htmlFor="q-desktop">Search products</label>
+              <input
+                id="q-desktop"
+                type="search"
+                value={term}
+                onChange={(e) => setTerm(e.target.value)}
+                placeholder="Search books, authors, ISBN…"
+                className="min-w-0 flex-1 border-0 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:ring-0"
+              />
+              <button type="submit" aria-label="Search"
+                      className="inline-flex items-center justify-center bg-brand px-3 text-white transition hover:bg-brand-dark">
+                <SearchIcon />
+              </button>
+            </div>
+          </form>
+
           <div className="flex items-center gap-1">
             <Link to="/cart" aria-label="Shopping cart"
                   className="relative rounded-lg p-1.5 text-slate-600 transition hover:bg-brand-muted hover:text-brand">
@@ -176,6 +194,9 @@ export default function Header() {
                         <Link to="/account" className="block rounded-lg bg-brand px-3 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-brand-dark">
                           My account
                         </Link>
+                        <Link to="/wishlist" className="mt-2 block rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-center text-sm font-semibold text-slate-800 transition hover:bg-slate-50">
+                          My wishlist
+                        </Link>
                         <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:justify-end">
                           <button type="button" onClick={() => setProfileOpen(false)}
                                   className="order-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 sm:order-1 sm:w-auto">
@@ -214,6 +235,12 @@ export default function Header() {
                     <span className="ml-auto rounded-full bg-brand px-2 py-0.5 text-[10px] font-bold text-white">{cartCount}</span>
                   )}
                 </Link>
+                {user && (
+                  <Link to="/wishlist" className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 transition hover:bg-brand-muted hover:text-brand">
+                    <HeartIcon className="h-5 w-5 text-slate-400" />
+                    Wishlist
+                  </Link>
+                )}
               </nav>
 
               <div className="mt-4 border-t border-slate-100 pt-4">

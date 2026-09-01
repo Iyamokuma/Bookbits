@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Spinner, EmptyState, Alert, StatusBadge } from '../../components/ui';
 import { useFetch } from '../../lib/useFetch';
@@ -9,6 +10,19 @@ export default function Account() {
   const { user, setUser, setCartCount, notify } = useApp();
   const { data: orders, loading, error } = useFetch('/orders');
   const navigate = useNavigate();
+  const [resending, setResending] = useState(false);
+
+  const resendVerification = async () => {
+    setResending(true);
+    try {
+      const res = await api.post('/auth/resend-verification');
+      notify(res.message);
+    } catch (err) {
+      notify(err.message, 'error');
+    } finally {
+      setResending(false);
+    }
+  };
 
   const signOut = async () => {
     await api.post('/auth/logout');
@@ -37,7 +51,15 @@ export default function Account() {
         <div className="mt-6">
           <Alert tone="warning">
             Your email address hasn't been verified yet. Check your inbox for the link we sent when
-            you signed up.
+            you signed up.{' '}
+            <button
+              type="button"
+              onClick={resendVerification}
+              disabled={resending}
+              className="font-semibold underline underline-offset-2 disabled:opacity-60"
+            >
+              {resending ? 'Sending…' : 'Send it again'}
+            </button>
           </Alert>
         </div>
       )}

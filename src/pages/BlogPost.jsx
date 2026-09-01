@@ -25,8 +25,8 @@ export default function BlogPost() {
       <h1 className="mt-6 font-display text-3xl leading-tight text-slate-900">{data.title}</h1>
       <p className="mt-2 text-xs text-slate-400">{formatDate(data.published_at)}</p>
 
-      {data.cover_image && (
-        <img src={data.cover_image} alt="" className="mt-8 w-full rounded-2xl object-cover" />
+      {data.coverUrl && (
+        <img src={data.coverUrl} alt="" className="mt-8 w-full rounded-2xl object-cover" />
       )}
 
       <div className="mt-8 whitespace-pre-line text-[15px] leading-relaxed text-slate-700">

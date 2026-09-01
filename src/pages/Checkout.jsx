@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Spinner, EmptyState, Alert, Field, inputClass, textareaClass } from '../components/ui';
 import { useFetch } from '../lib/useFetch';
@@ -33,6 +33,15 @@ export default function Checkout() {
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Which gateways are live depends on server configuration, so fall back to
+  // the first one actually on offer rather than assuming Paystack.
+  const gateways = data?.gateways;
+  useEffect(() => {
+    if (gateways?.length && !gateways.some((g) => g.id === gateway)) {
+      setGateway(gateways[0].id);
+    }
+  }, [gateways, gateway]);
 
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
@@ -135,6 +144,12 @@ export default function Checkout() {
           <section className="rounded-2xl border border-slate-200 bg-white p-6">
             <h2 className="mb-4 text-sm font-semibold text-slate-900">Payment method</h2>
             {errors.gateway && <p className="mb-3 text-xs text-rose-600">{errors.gateway}</p>}
+            {data.gateways.length === 0 && (
+              <Alert>
+                Online payment is temporarily unavailable. Please contact us and we will help you
+                complete this order.
+              </Alert>
+            )}
             <div className="space-y-2.5">
               {data.gateways.map((g) => (
                 <label

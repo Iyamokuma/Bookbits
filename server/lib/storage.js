@@ -68,6 +68,14 @@ export async function saveImage(file) {
   const name = `cover_${crypto.randomBytes(8).toString('hex')}.${ext}`;
 
   if (!usingObjectStorage()) {
+    // Serverless filesystems are read-only and per-invocation, so a local write
+    // would either throw something cryptic or vanish. Say what to fix instead.
+    if (process.env.VERCEL) {
+      throw new Error(
+        'Image uploads need object storage in production. Set SUPABASE_SERVICE_KEY ' +
+          '(the service_role key from Supabase → Settings → API) and redeploy.'
+      );
+    }
     await fs.mkdir(localDir, { recursive: true });
     await fs.writeFile(path.join(localDir, name), file.buffer);
     return `uploads/covers/${name}`;

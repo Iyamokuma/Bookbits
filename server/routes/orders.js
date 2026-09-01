@@ -2,7 +2,13 @@ import { Router } from 'express';
 import { query } from '../db.js';
 import * as cart from '../lib/cart.js';
 import { createOrder, getOrderForUser, getOrderItems, recordFailedPayment } from '../lib/orders.js';
-import { initiatePayment, paymentReference, GATEWAYS, gatewayLabels } from '../lib/payments.js';
+import {
+  initiatePayment,
+  paymentReference,
+  gatewayLabels,
+  availableGateways,
+  isGatewayConfigured,
+} from '../lib/payments.js';
 import { round2 } from '../lib/money.js';
 import { asyncRoute, unauthorized, unprocessable, notFound, badRequest } from '../lib/http.js';
 
@@ -83,7 +89,7 @@ router.get(
       subtotal,
       shippingFee: SHIPPING_FEE,
       total: round2(subtotal + SHIPPING_FEE),
-      gateways: GATEWAYS.map((id) => ({ id, label: gatewayLabels[id] })),
+      gateways: availableGateways().map((id) => ({ id, label: gatewayLabels[id] })),
     });
   })
 );
@@ -98,7 +104,7 @@ router.post(
 
     const { shipping, errors } = validateShipping(req.body.shipping || {});
     const gateway = String(req.body.gateway || 'paystack');
-    if (!GATEWAYS.includes(gateway)) errors.gateway = 'Choose a payment method.';
+    if (!isGatewayConfigured(gateway)) errors.gateway = 'Choose a payment method.';
 
     // Re-check stock at submit time; the cart may have sat idle for a while.
     for (const line of lines) {
@@ -173,7 +179,7 @@ router.get(
         unitPrice: Number(i.unit_price),
         subtotal: Number(i.subtotal),
       })),
-      gateways: GATEWAYS.map((id) => ({ id, label: gatewayLabels[id] })),
+      gateways: availableGateways().map((id) => ({ id, label: gatewayLabels[id] })),
     });
   })
 );
@@ -187,7 +193,7 @@ router.post(
     if (!order) throw notFound('Order not found.');
     if (order.payment_confirmed_at) throw badRequest('This order has already been paid for.');
 
-    const gateway = GATEWAYS.includes(req.body.gateway) ? req.body.gateway : 'paystack';
+    const gateway = isGatewayConfigured(req.body.gateway) ? req.body.gateway : 'paystack';
     const reference = paymentReference(gateway, order.id);
     const init = await initiatePayment(gateway, order, user, reference);
 

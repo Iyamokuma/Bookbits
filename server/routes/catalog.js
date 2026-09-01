@@ -5,10 +5,12 @@ import {
   fetchBookById,
   fetchRelatedBooks,
   fetchDealBooks,
+  fetchFeaturedBooks,
   fetchNewArrivalBooks,
   fetchStationeryBooks,
   fetchCategoriesForNav,
   bookCoverUrl,
+  mediaUrl,
 } from '../lib/books.js';
 import { bookSupportsCoverOptions } from '../lib/cart.js';
 import { asyncRoute, notFound } from '../lib/http.js';
@@ -39,6 +41,9 @@ export function presentBook(b) {
   };
 }
 
+/** Blog rows keep their snake_case shape; only the cover needs resolving. */
+const presentPost = (p) => ({ ...p, coverUrl: mediaUrl(p.cover_image) });
+
 const presentBookDetail = (b) => ({
   ...presentBook(b),
   description: b.description,
@@ -67,7 +72,8 @@ router.get(
 router.get(
   '/home',
   asyncRoute(async (req, res) => {
-    const [newArrivals, deals, stationery, posts] = await Promise.all([
+    const [featured, newArrivals, deals, stationery, posts] = await Promise.all([
+      fetchFeaturedBooks(8),
       fetchNewArrivalBooks(8),
       fetchDealBooks(8),
       fetchStationeryBooks(4),
@@ -79,10 +85,11 @@ router.get(
     ]);
 
     res.json({
+      featured: featured.map(presentBook),
       newArrivals: newArrivals.map(presentBook),
       deals: deals.map(presentBook),
       stationery: stationery.map(presentBook),
-      posts,
+      posts: posts.map(presentPost),
     });
   })
 );
@@ -133,13 +140,12 @@ router.get(
 router.get(
   '/blog',
   asyncRoute(async (req, res) => {
-    res.json(
-      await query(
-        `SELECT id, title, slug, excerpt, cover_image, published_at FROM blogs
-         WHERE is_active = TRUE AND published_at IS NOT NULL AND published_at <= now()
-         ORDER BY published_at DESC`
-      )
+    const posts = await query(
+      `SELECT id, title, slug, excerpt, cover_image, published_at FROM blogs
+       WHERE is_active = TRUE AND published_at IS NOT NULL AND published_at <= now()
+       ORDER BY published_at DESC`
     );
+    res.json(posts.map(presentPost));
   })
 );
 
@@ -153,7 +159,7 @@ router.get(
       [req.params.slug]
     );
     if (!post) throw notFound("That article doesn't exist or is no longer published.");
-    res.json(post);
+    res.json(presentPost(post));
   })
 );
 

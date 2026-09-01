@@ -24,6 +24,20 @@ export const WhatsAppIcon = ({ className = 'h-4 w-4' }) => (
   </svg>
 );
 
+/** Outlined when unsaved, solid when saved. */
+export const HeartIcon = ({ className = 'h-5 w-5', filled = false }) => (
+  <svg
+    className={className}
+    fill={filled ? 'currentColor' : 'none'}
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+    aria-hidden="true"
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+          d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+  </svg>
+);
+
 export const CartIcon = ({ className = 'h-6 w-6' }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />

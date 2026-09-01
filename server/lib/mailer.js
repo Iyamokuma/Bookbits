@@ -204,6 +204,51 @@ export function sendDeliveryNotice(to, order, name) {
   });
 }
 
+/**
+ * Forward a contact-form enquiry to the shop. Reply-to is the sender so staff
+ * can answer straight from their inbox.
+ */
+export function sendContactMessage({ name, email, phone, subject, message }) {
+  const body = esc(message).replace(/\n/g, '<br>');
+  return sendEmail({
+    to: config.store.email,
+    subject: `Website enquiry: ${subject}`,
+    replyTo: email,
+    html: `<p><strong>${esc(name)}</strong> sent a message from the website.</p>
+      <div style="background:#f9fafb;border-radius:10px;padding:14px 16px;margin:18px 0;font-size:14px;line-height:1.6;">
+        <strong>Email:</strong> ${esc(email)}<br>
+        ${phone ? `<strong>Phone:</strong> ${esc(phone)}<br>` : ''}
+        <strong>Subject:</strong> ${esc(subject)}
+      </div>
+      <p>${body}</p>`,
+  });
+}
+
+/** Acknowledgement so the sender knows the message arrived. */
+export function sendContactAcknowledgement({ name, email, subject }) {
+  return sendEmail({
+    to: email,
+    subject: 'We received your message',
+    replyTo: config.store.email,
+    html: `<p>Hi ${esc(name)},</p>
+      <p>Thanks for getting in touch about “${esc(subject)}”. We have your message and will reply
+         within one business day.</p>
+      <p style="color:#6b7280;font-size:13px;">If it's urgent, WhatsApp us on ${esc(config.store.phone)}.</p>`,
+  });
+}
+
+export function sendNewsletterWelcome(email) {
+  return sendEmail({
+    to: email,
+    subject: `You're on the ${config.store.name} list`,
+    html: `<p>Thanks for subscribing.</p>
+      <p>You'll hear from us about new arrivals, promotions and reading picks — no more than a
+         couple of times a month.</p>
+      <p style="color:#6b7280;font-size:13px;">Changed your mind? Reply with STOP and we'll take you
+         off the list.</p>`,
+  });
+}
+
 /** Free-form message composed by an admin on the order detail screen. */
 export function sendOrderUpdateEmail(to, subject, message, order) {
   const body = esc(message).replace(/\n/g, '<br>');

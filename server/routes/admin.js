@@ -523,6 +523,7 @@ router.get(
         slug: c.slug,
         description: c.description,
         sortOrder: c.sort_order,
+        isActive: c.is_active,
         bookCount: c.book_count,
       })),
       pagination: paginate(page, total.n),
@@ -555,6 +556,42 @@ router.post(
     );
 
     res.status(201).json({ message: `Category “${name}” added.` });
+  })
+);
+
+router.patch(
+  '/admin/categories/:id',
+  asyncRoute(async (req, res) => {
+    const id = parseInt(req.params.id, 10);
+    const existing = await queryOne('SELECT * FROM categories WHERE id = $1', [id]);
+    if (!existing) throw notFound('That category no longer exists.');
+
+    const name = String(req.body.name ?? existing.name).trim();
+    const slug = slugify(req.body.slug || name);
+    if (!name || !slug) throw badRequest('Enter a category name.');
+
+    const clash = await queryOne('SELECT id FROM categories WHERE slug = $1 AND id <> $2', [slug, id]);
+    if (clash) throw badRequest(`A category with the address “${slug}” already exists.`);
+
+    // Hiding a category that still holds products would strand them, since the
+    // storefront only lists books whose category is active.
+    const isActive = req.body.isActive === undefined ? existing.is_active : Boolean(req.body.isActive);
+
+    await query(
+      `UPDATE categories
+          SET name = $1, slug = $2, description = $3, sort_order = $4, is_active = $5
+        WHERE id = $6`,
+      [
+        name,
+        slug,
+        String(req.body.description ?? existing.description ?? '').trim() || null,
+        parseInt(req.body.sortOrder, 10) || 0,
+        isActive,
+        id,
+      ]
+    );
+
+    res.json({ message: `Category “${name}” updated.` });
   })
 );
 

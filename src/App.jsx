@@ -26,6 +26,7 @@ import ResetPassword from './pages/auth/ResetPassword';
 
 import Account from './pages/account/Account';
 import OrderDetail from './pages/account/OrderDetail';
+import Wishlist from './pages/account/Wishlist';
 
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminLogin from './pages/admin/AdminLogin';
@@ -67,6 +68,7 @@ export default function App() {
           <Route element={<RequireAuth />}>
             <Route path="checkout" element={<Checkout />} />
             <Route path="account" element={<Account />} />
+            <Route path="wishlist" element={<Wishlist />} />
             <Route path="orders/:id" element={<OrderDetail />} />
           </Route>
 

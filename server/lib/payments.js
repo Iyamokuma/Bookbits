@@ -9,6 +9,21 @@ export const gatewayLabels = {
   korapayment: 'Korapay',
 };
 
+/** A gateway can only take money once its keys are present. */
+const gatewayKeys = {
+  paystack: () => config.paystack.secretKey,
+  klump: () => config.klump.secretKey && config.klump.publicKey,
+  korapayment: () => config.korapay.secretKey,
+};
+
+export const isGatewayConfigured = (gateway) => Boolean(gatewayKeys[gateway]?.());
+
+/**
+ * Only offer what can actually complete. Listing an unconfigured gateway means
+ * the customer picks it, the order is created, and payment then fails to start.
+ */
+export const availableGateways = () => GATEWAYS.filter(isGatewayConfigured);
+
 const REF_PREFIX = { paystack: 'PST', klump: 'KLP', korapayment: 'KRP' };
 
 export function paymentReference(gateway, orderId) {
