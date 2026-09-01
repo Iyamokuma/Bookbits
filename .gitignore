@@ -44,3 +44,12 @@ Thumbs.db
 npm-debug.log*
 tmp/
 temp/
+
+# Vercel CLI link data and the env vars it pulls down
+.vercel
+
+# Real secrets stay local; the template is committed so a fresh clone knows
+# which variables to fill in.
+.env
+.env.*
+!.env.example
