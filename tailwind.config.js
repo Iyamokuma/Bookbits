@@ -39,10 +39,9 @@ export default {
         },
       },
       fontFamily: {
-        // Albert Sans + Syne — readable but far less common than Inter/Playfair stacks.
-        sans: ['"Albert Sans"', 'system-ui', 'sans-serif'],
-        display: ['Syne', 'system-ui', 'sans-serif'],
-        serif: ['Syne', 'system-ui', 'sans-serif'],
+        sans: ['"Playfair Display"', 'Georgia', 'serif'],
+        display: ['"Original Surfer"', 'cursive'],
+        serif: ['"Lobster Two"', 'cursive'],
       },
     },
   },
