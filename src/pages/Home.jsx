@@ -5,6 +5,7 @@ import { useFetch } from '../lib/useFetch';
 import { Spinner } from '../components/ui';
 import { categoryIcon, categoryTile } from '../lib/categoryIcons';
 import { ArrowRight, ChevronLeft, ChevronRight, ClockIcon } from '../components/icons';
+import Aos from '../components/Aos';
 
 const SLIDE_MS = 5000;
 
@@ -196,7 +197,7 @@ function CategoryStrip() {
   };
 
   return (
-    <section id="categories" className="scroll-mt-24 border-t border-slate-100 bg-gradient-to-b from-slate-50 to-white py-10 sm:py-12" aria-labelledby="categories-heading">
+    <Aos as="section" id="categories" className="scroll-mt-24 border-t border-slate-100 bg-gradient-to-b from-slate-50 to-white py-10 sm:py-12" animation="fade-up" aria-labelledby="categories-heading">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -250,7 +251,7 @@ function CategoryStrip() {
           </div>
         )}
       </div>
-    </section>
+    </Aos>
   );
 }
 
@@ -321,19 +322,56 @@ const EmptyNote = ({ children }) => (
 export default function Home() {
   const { data, loading } = useFetch('/home');
 
-  const featured = (data?.featured || []).slice(0, 4);
-  const deals = (data?.deals || []).slice(0, 4);
-  const newArrivals = (data?.newArrivals || []).slice(0, 4);
-  const stationery = (data?.stationery || []).slice(0, 4);
+  const featured = (data?.featured || []).slice(0, 8);
+  const deals = (data?.deals || []).slice(0, 8);
+  const newArrivals = (data?.newArrivals || []).slice(0, 8);
+  const stationery = (data?.stationery || []).slice(0, 8);
+  const byCategory = data?.byCategory || [];
 
   return (
     <>
       <Hero />
       <CategoryStrip />
 
+      {/* Random picks from each category (refreshed on each page load) */}
+      {!loading && byCategory.length > 0 && (
+        <Aos as="section" className="border-t border-slate-100 bg-white py-12 sm:py-14" animation="fade-up" aria-labelledby="category-picks-heading">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mb-10 text-center sm:text-left">
+              <h2 id="category-picks-heading" className="font-serif text-2xl font-bold text-slate-900 sm:text-3xl">
+                Picks from every category
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">A fresh selection of up to eight books from each shelf.</p>
+            </div>
+
+            <div className="space-y-14">
+              {byCategory.map((group, i) => (
+                <Aos key={group.slug} animation="fade-up" delay={Math.min(i * 80, 400)}>
+                  <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                    <h3 className="font-serif text-xl font-bold text-slate-900">{group.name}</h3>
+                    <Link
+                      to={`/shop?cat=${encodeURIComponent(group.slug)}`}
+                      className="text-sm font-semibold text-brand transition hover:text-brand-dark"
+                    >
+                      View all in {group.name} ›
+                    </Link>
+                  </div>
+                  <CoverGrid
+                    books={group.books}
+                    badge={group.name}
+                    badgeClass="bg-slate-800/85"
+                    hoverClass="group-hover:text-brand"
+                  />
+                </Aos>
+              ))}
+            </div>
+          </div>
+        </Aos>
+      )}
+
       {/* Featured — only shown once the admin has flagged something */}
       {featured.length > 0 && (
-        <section className="border-t border-slate-100 bg-white py-12 sm:py-14" aria-labelledby="featured-heading">
+        <Aos as="section" className="border-t border-slate-100 bg-white py-12 sm:py-14" animation="fade-up" aria-labelledby="featured-heading">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mb-8">
               <h2 id="featured-heading" className="font-serif text-2xl font-bold text-slate-900 sm:text-3xl">Featured</h2>
@@ -341,11 +379,11 @@ export default function Home() {
             </div>
             <CoverGrid books={featured} badge="Featured" badgeClass="bg-brand-700" hoverClass="group-hover:text-brand-700" />
           </div>
-        </section>
+        </Aos>
       )}
 
       {/* Daily Deals */}
-      <section className="border-t border-slate-100 bg-gradient-to-b from-[#eff5ff] to-white py-12 sm:py-14" aria-labelledby="deals-heading">
+      <Aos as="section" className="border-t border-slate-100 bg-gradient-to-b from-[#eff5ff] to-white py-12 sm:py-14" animation="fade-up" aria-labelledby="deals-heading">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -368,10 +406,10 @@ export default function Home() {
             </Link>
           </div>
         </div>
-      </section>
+      </Aos>
 
       {/* New Arrivals */}
-      <section className="border-t border-slate-100 bg-white py-12 sm:py-14" aria-labelledby="new-arrivals-heading">
+      <Aos as="section" className="border-t border-slate-100 bg-white py-12 sm:py-14" animation="fade-up" aria-labelledby="new-arrivals-heading">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-8">
             <h2 id="new-arrivals-heading" className="font-serif text-2xl font-bold text-slate-900 sm:text-3xl">New Arrivals</h2>
@@ -384,11 +422,11 @@ export default function Home() {
             <CoverGrid books={newArrivals} badge="New" badgeClass="bg-emerald-600" hoverClass="group-hover:text-emerald-700" />
           )}
         </div>
-      </section>
+      </Aos>
 
       {/* Stationery */}
       {stationery.length > 0 && (
-        <section className="border-t border-slate-100 bg-gradient-to-b from-accent-50 to-white py-12 sm:py-14" aria-labelledby="stationery-heading">
+        <Aos as="section" className="border-t border-slate-100 bg-gradient-to-b from-accent-50 to-white py-12 sm:py-14" animation="fade-up" aria-labelledby="stationery-heading">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
@@ -399,12 +437,12 @@ export default function Home() {
             </div>
             <CoverGrid books={stationery} badge="Stationery" badgeClass="bg-accent-500" hoverClass="group-hover:text-accent-600" />
           </div>
-        </section>
+        </Aos>
       )}
 
       {/* From the blog */}
       {data?.posts?.length > 0 && (
-        <section className="border-t border-slate-100 bg-slate-50 py-12 sm:py-14" aria-labelledby="blog-heading">
+        <Aos as="section" className="border-t border-slate-100 bg-slate-50 py-12 sm:py-14" animation="fade-up" aria-labelledby="blog-heading">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
@@ -428,7 +466,7 @@ export default function Home() {
               ))}
             </div>
           </div>
-        </section>
+        </Aos>
       )}
     </>
   );

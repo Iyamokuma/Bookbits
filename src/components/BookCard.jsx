@@ -3,10 +3,11 @@ import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
 import { formatMoney } from '../lib/format';
 import { useApp } from '../context/AppContext';
+import { trackMeta } from '../lib/metaPixel';
 import { HeartIcon } from './icons';
 
 export default function BookCard({ book }) {
-  const { setCartCount, notify, wishlist, toggleWishlist } = useApp();
+  const { setCartCount, notify, wishlist, toggleWishlist, store } = useApp();
   const [adding, setAdding] = useState(false);
   const saved = wishlist.includes(book.id);
 
@@ -15,6 +16,14 @@ export default function BookCard({ book }) {
     try {
       const res = await api.post('/cart/items', { bookId: book.id, qty: 1 });
       setCartCount(res.count);
+      trackMeta('AddToCart', {
+        content_type: 'product',
+        content_ids: [String(book.id)],
+        content_name: book.title,
+        value: book.price,
+        currency: store.currencyCode,
+        num_items: 1,
+      });
       notify(`“${book.title}” added to your cart.`);
     } catch (err) {
       notify(err.message, 'error');

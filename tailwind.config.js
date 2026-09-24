@@ -39,8 +39,10 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        serif: ['Merriweather', 'Georgia', 'serif'],
+        // Albert Sans + Syne — readable but far less common than Inter/Playfair stacks.
+        sans: ['"Albert Sans"', 'system-ui', 'sans-serif'],
+        display: ['Syne', 'system-ui', 'sans-serif'],
+        serif: ['Syne', 'system-ui', 'sans-serif'],
       },
     },
   },

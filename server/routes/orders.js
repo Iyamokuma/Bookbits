@@ -11,6 +11,7 @@ import {
 } from '../lib/payments.js';
 import { round2 } from '../lib/money.js';
 import { asyncRoute, unauthorized, unprocessable, notFound, badRequest } from '../lib/http.js';
+import { captureMetaAttribution } from '../lib/meta.js';
 
 const router = Router();
 
@@ -122,6 +123,9 @@ router.post(
       notes: String(req.body.notes || '').trim() || null,
     });
 
+    // Keep _fbp / _fbc through the payment redirect for Conversions API matching.
+    req.session.metaAttribution = captureMetaAttribution(req);
+
     const reference = paymentReference(gateway, order.id);
     const init = await initiatePayment(gateway, order, user, reference);
 
@@ -172,6 +176,7 @@ router.get(
       order: presentOrder(order),
       items: items.map((i) => ({
         id: i.id,
+        bookId: i.book_id,
         title: i.title,
         author: i.author,
         coverType: i.cover_type,

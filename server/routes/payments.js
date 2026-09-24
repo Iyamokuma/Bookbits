@@ -4,6 +4,7 @@ import { getOrder, getOrderItems, markOrderPaid, recordFailedPayment } from '../
 import { sendOrderConfirmation, sendAdminOrderNotification } from '../lib/mailer.js';
 import * as cart from '../lib/cart.js';
 import { findUserById } from '../lib/auth.js';
+import { trackPurchase } from '../lib/meta.js';
 
 const router = Router();
 
@@ -11,7 +12,7 @@ const router = Router();
  * Fulfil a verified payment: mark paid, empty the cart, notify both sides.
  * Safe to call more than once for the same order.
  */
-export async function fulfilOrder({ order, gateway, verification, session }) {
+export async function fulfilOrder({ order, gateway, verification, session, req }) {
   const { alreadyHandled, order: paidOrder } = await markOrderPaid({
     orderId: order.id,
     method: gateway,
@@ -33,9 +34,15 @@ export async function fulfilOrder({ order, gateway, verification, session }) {
   Promise.allSettled([
     sendOrderConfirmation(user, paidOrder, items),
     sendAdminOrderNotification(paidOrder, user, items),
+    trackPurchase({
+      order: paidOrder,
+      user,
+      items,
+      attribution: req?.session?.metaAttribution,
+    }),
   ]).then((results) => {
     for (const r of results) {
-      if (r.status === 'rejected') console.error('[payment] notification failed:', r.reason);
+      if (r.status === 'rejected') console.error('[payment] side effect failed:', r.reason);
     }
   });
 
@@ -75,7 +82,7 @@ router.get('/callback', async (req, res) => {
       return spaResult('failed', orderId);
     }
 
-    await fulfilOrder({ order, gateway, verification, session: req.session });
+    await fulfilOrder({ order, gateway, verification, session: req.session, req });
     delete req.session.pendingReference;
 
     spaResult('success', orderId);

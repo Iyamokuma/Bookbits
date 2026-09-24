@@ -85,6 +85,43 @@ export async function fetchCategoriesForNav() {
   `);
 }
 
+/** Up to `limitPerCategory` random in-stock listings per active category (homepage). */
+export async function fetchRandomBooksGroupedByCategory(limitPerCategory = 8) {
+  const rows = await query(
+    `
+    WITH picked AS (
+      SELECT
+        b.*,
+        c.slug AS cat_slug,
+        c.name AS cat_name,
+        c.sort_order AS cat_sort,
+        ROW_NUMBER() OVER (PARTITION BY b.category_id ORDER BY RANDOM()) AS rn
+      FROM books b
+      INNER JOIN categories c ON c.id = b.category_id
+      WHERE b.is_active = TRUE AND c.is_active = TRUE
+    )
+    SELECT * FROM picked
+    WHERE rn <= $1
+    ORDER BY cat_sort, cat_name, rn
+    `,
+    [limitPerCategory]
+  );
+
+  const bySlug = new Map();
+  for (const row of rows) {
+    const slug = row.cat_slug;
+    if (!bySlug.has(slug)) {
+      bySlug.set(slug, {
+        slug,
+        name: row.cat_name,
+        books: [],
+      });
+    }
+    bySlug.get(slug).books.push(row);
+  }
+  return [...bySlug.values()];
+}
+
 export async function fetchAllCategories() {
   return query(`
     SELECT c.*, COUNT(b.id)::int AS book_count

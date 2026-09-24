@@ -4,6 +4,7 @@ import BookCard from '../components/BookCard';
 import { Spinner, EmptyState, Alert, inputClass } from '../components/ui';
 import { useFetch } from '../lib/useFetch';
 import { useApp } from '../context/AppContext';
+import Aos from '../components/Aos';
 
 export default function Shop() {
   const [params, setParams] = useSearchParams();
@@ -32,7 +33,7 @@ export default function Shop() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10">
-      <div className="mb-8">
+      <Aos className="mb-8" animation="fade-down">
         <h1 className="font-display text-3xl text-slate-900">{heading}</h1>
         {!loading && data && (
           <p className="mt-1 text-sm text-slate-500">
@@ -74,9 +75,9 @@ export default function Shop() {
             </Link>
           ))}
         </div>
-      </div>
+      </Aos>
 
-      <div className="grid gap-8 lg:grid-cols-[13rem_1fr]">
+      <Aos animation="fade-up" className="grid gap-8 lg:grid-cols-[13rem_1fr]">
         <aside className="hidden lg:block">
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
             Categories
@@ -118,7 +119,7 @@ export default function Shop() {
             </div>
           )}
         </div>
-      </div>
+      </Aos>
     </div>
   );
 }

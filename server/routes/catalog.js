@@ -9,6 +9,7 @@ import {
   fetchNewArrivalBooks,
   fetchStationeryBooks,
   fetchCategoriesForNav,
+  fetchRandomBooksGroupedByCategory,
   bookCoverUrl,
   mediaUrl,
 } from '../lib/books.js';
@@ -72,11 +73,12 @@ router.get(
 router.get(
   '/home',
   asyncRoute(async (req, res) => {
-    const [featured, newArrivals, deals, stationery, posts] = await Promise.all([
+    const [featured, newArrivals, deals, stationery, byCategory, posts] = await Promise.all([
       fetchFeaturedBooks(8),
       fetchNewArrivalBooks(8),
       fetchDealBooks(8),
-      fetchStationeryBooks(4),
+      fetchStationeryBooks(8),
+      fetchRandomBooksGroupedByCategory(8),
       query(
         `SELECT id, title, slug, excerpt, cover_image, published_at FROM blogs
          WHERE is_active = TRUE AND published_at IS NOT NULL AND published_at <= now()
@@ -89,6 +91,11 @@ router.get(
       newArrivals: newArrivals.map(presentBook),
       deals: deals.map(presentBook),
       stationery: stationery.map(presentBook),
+      byCategory: byCategory.map((group) => ({
+        slug: group.slug,
+        name: group.name,
+        books: group.books.map(presentBook),
+      })),
       posts: posts.map(presentPost),
     });
   })

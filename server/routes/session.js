@@ -24,6 +24,9 @@ router.get(
       },
       // Empty while Google sign-in is suspended, which hides the button.
       googleClientId: googleEnabled() ? config.google.clientId : '',
+      // Public numeric ID — required for the browser pixel script.
+      metaPixelId:
+        config.meta.enabled && config.meta.pixelId ? config.meta.pixelId : '',
     });
   })
 );

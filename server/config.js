@@ -87,6 +87,15 @@ export const config = {
     publicKey: process.env.KORAPAY_PUBLIC_KEY || '',
     secretKey: process.env.KORAPAY_SECRET_KEY || '',
   },
+
+  // Meta Pixel (browser) + Conversions API (server Purchase on paid orders).
+  // Events Manager -> your dataset -> Settings: Pixel ID; Conversions API ->
+  // Generate access token (the long EAA… string).
+  meta: {
+    enabled: bool(process.env.META_CONVERSIONS_ENABLED, true),
+    pixelId: process.env.META_PIXEL_ID || '',
+    accessToken: process.env.META_CAPI_ACCESS_TOKEN || '',
+  },
 };
 
 /** Phone digits only, for tel: and wa.me links. */

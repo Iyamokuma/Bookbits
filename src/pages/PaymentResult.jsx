@@ -1,10 +1,13 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import { api } from '../lib/api';
+import { purchaseEventId, trackMeta } from '../lib/metaPixel';
 
 export default function PaymentResult() {
   const [params] = useSearchParams();
-  const { loadSession } = useApp();
+  const { loadSession, store } = useApp();
+  const purchaseTracked = useRef(false);
 
   const success = params.get('status') === 'success';
   const orderId = params.get('order');
@@ -13,6 +16,39 @@ export default function PaymentResult() {
   useEffect(() => {
     loadSession().catch(() => {});
   }, [loadSession]);
+
+  // Browser Purchase (deduplicated with server CAPI via eventID).
+  useEffect(() => {
+    if (!success || !orderId || purchaseTracked.current) return;
+    purchaseTracked.current = true;
+
+    (async () => {
+      try {
+        const detail = await api.get(`/orders/${orderId}`);
+        const order = detail.order;
+        const items = detail.items || [];
+        trackMeta(
+          'Purchase',
+          {
+            currency: store.currencyCode,
+            value: order.total,
+            num_items: items.reduce((n, i) => n + i.qty, 0),
+            content_ids: items
+              .map((i) => (i.bookId != null ? String(i.bookId) : null))
+              .filter(Boolean),
+            content_type: 'product',
+          },
+          purchaseEventId(order.id)
+        );
+      } catch {
+        trackMeta(
+          'Purchase',
+          { currency: store.currencyCode },
+          purchaseEventId(orderId)
+        );
+      }
+    })();
+  }, [success, orderId, store.currencyCode]);
 
   return (
     <div className="mx-auto max-w-lg px-4 py-20 text-center">

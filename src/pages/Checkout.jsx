@@ -5,6 +5,7 @@ import { useFetch } from '../lib/useFetch';
 import { useApp } from '../context/AppContext';
 import { api, ApiError } from '../lib/api';
 import { formatMoney } from '../lib/format';
+import { trackMeta } from '../lib/metaPixel';
 
 const NIGERIAN_STATES = [
   'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno',
@@ -15,7 +16,7 @@ const NIGERIAN_STATES = [
 ];
 
 export default function Checkout() {
-  const { user, notify } = useApp();
+  const { user, notify, store } = useApp();
   const { data, loading, error } = useFetch('/checkout');
   const navigate = useNavigate();
 
@@ -52,6 +53,11 @@ export default function Checkout() {
     setFormError(null);
 
     try {
+      trackMeta('InitiateCheckout', {
+        currency: store.currencyCode,
+        value: data?.total,
+        num_items: data?.itemCount,
+      });
       const res = await api.post('/checkout', { shipping: form, gateway, notes });
       // Hand off to the payment gateway, which will send the customer back to
       // /payment/callback when they are done.

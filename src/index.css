@@ -29,4 +29,10 @@
       transform: scaleX(1);
     }
   }
+
+  [data-aos] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
 }

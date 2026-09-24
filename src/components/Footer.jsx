@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { api } from '../lib/api';
 import { FacebookIcon, InstagramIcon, WhatsAppIcon } from './icons';
+import Aos from './Aos';
 
 function NewsletterForm() {
   const { notify } = useApp();
@@ -69,7 +70,7 @@ export default function Footer() {
     <>
       <footer className="border-t border-slate-200 bg-slate-900 text-slate-300">
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-14">
-          <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-12">
+          <Aos animation="fade-up" className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-12">
             <div className="sm:col-span-2 lg:col-span-1">
               <img src="/img/logo.png" alt={store.name} className="h-14 w-auto rounded-lg bg-white p-1.5" />
               <p className="mt-4 max-w-sm text-sm leading-relaxed text-slate-400">
@@ -147,7 +148,7 @@ export default function Footer() {
                 ))}
               </ul>
             </div>
-          </div>
+          </Aos>
 
           <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-slate-800 pt-8 sm:flex-row">
             <p className="text-center text-sm text-slate-500 sm:text-left">
@@ -159,6 +160,18 @@ export default function Footer() {
               <Link to="/blog" className="transition hover:text-slate-300">Blog</Link>
             </nav>
           </div>
+
+          <Aos animation="fade-in" delay={120} className="mt-6 text-center text-xs text-slate-600">
+            Built by{' '}
+            <a
+              href="https://timzdigital.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-slate-400 transition hover:text-white"
+            >
+              timzdigital
+            </a>
+          </Aos>
         </div>
       </footer>
 

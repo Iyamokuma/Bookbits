@@ -29,6 +29,7 @@ export function AppProvider({ children }) {
   const [store, setStore] = useState(DEFAULT_STORE);
   const [categories, setCategories] = useState([]);
   const [googleClientId, setGoogleClientId] = useState('');
+  const [metaPixelId, setMetaPixelId] = useState('');
   const [wishlist, setWishlist] = useState([]);
   const [ready, setReady] = useState(false);
   const [toast, setToast] = useState(null);
@@ -42,6 +43,7 @@ export function AppProvider({ children }) {
     setCartCount(session.cartCount);
     setStore({ ...DEFAULT_STORE, ...session.store });
     setGoogleClientId(session.googleClientId || '');
+    setMetaPixelId(session.metaPixelId || '');
     return session;
   }, []);
 
@@ -114,6 +116,7 @@ export function AppProvider({ children }) {
       store,
       categories,
       googleClientId,
+      metaPixelId,
       wishlist,
       toggleWishlist,
       ready,
@@ -123,7 +126,7 @@ export function AppProvider({ children }) {
       loadSession,
     }),
     [
-      user, isAdmin, cartCount, store, categories, googleClientId,
+      user, isAdmin, cartCount, store, categories, googleClientId, metaPixelId,
       wishlist, toggleWishlist, ready, toast, notify, dismissToast, loadSession,
     ]
   );

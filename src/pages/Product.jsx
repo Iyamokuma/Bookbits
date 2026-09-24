@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import BookCard from '../components/BookCard';
 import { Spinner, EmptyState, Alert } from '../components/ui';
@@ -7,16 +7,37 @@ import { useApp } from '../context/AppContext';
 import { HeartIcon } from '../components/icons';
 import { api } from '../lib/api';
 import { formatMoney } from '../lib/format';
+import { trackMeta } from '../lib/metaPixel';
 
 export default function Product() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { setCartCount, notify, wishlist, toggleWishlist } = useApp();
+  const { setCartCount, notify, wishlist, toggleWishlist, store } = useApp();
   const { data, loading, error } = useFetch(`/books/${id}`);
 
   const [coverType, setCoverType] = useState('paperback');
   const [qty, setQty] = useState(1);
   const [busy, setBusy] = useState(false);
+
+  const book = data?.book;
+  const price = book
+    ? book.hasCoverOptions
+      ? coverType === 'hardcover'
+        ? book.hardcoverPrice
+        : book.paperbackPrice
+      : book.price
+    : 0;
+
+  useEffect(() => {
+    if (!book) return;
+    trackMeta('ViewContent', {
+      content_type: 'product',
+      content_ids: [String(book.id)],
+      content_name: book.title,
+      value: price,
+      currency: store.currencyCode,
+    });
+  }, [book, price, store.currencyCode]);
 
   if (loading) return <Spinner />;
   if (error) {
@@ -27,13 +48,8 @@ export default function Product() {
     );
   }
 
-  const { book, related } = data;
+  const { related } = data;
   const saved = wishlist.includes(book.id);
-  const price = book.hasCoverOptions
-    ? coverType === 'hardcover'
-      ? book.hardcoverPrice
-      : book.paperbackPrice
-    : book.price;
 
   const addToCart = async (thenCheckout = false) => {
     setBusy(true);
@@ -44,6 +60,14 @@ export default function Product() {
         coverType: book.hasCoverOptions ? coverType : null,
       });
       setCartCount(res.count);
+      trackMeta('AddToCart', {
+        content_type: 'product',
+        content_ids: [String(book.id)],
+        content_name: book.title,
+        value: price * qty,
+        currency: store.currencyCode,
+        num_items: qty,
+      });
       if (thenCheckout) navigate('/cart');
       else notify(`“${book.title}” added to your cart.`);
     } catch (err) {
