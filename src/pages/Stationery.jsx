@@ -1,12 +1,30 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import BookCard from '../components/BookCard';
-import { Spinner, EmptyState, Alert } from '../components/ui';
+import { Spinner, EmptyState, Alert, Pagination } from '../components/ui';
 import { useFetch } from '../lib/useFetch';
 
 export default function Stationery() {
-  const [term, setTerm] = useState('');
-  const [query, setQuery] = useState('');
-  const { data, loading, error } = useFetch(`/stationery?q=${encodeURIComponent(query)}`);
+  const [params, setParams] = useSearchParams();
+  const page = params.get('page') || '1';
+  const query = params.get('q') || '';
+  const [term, setTerm] = useState(query);
+
+  const qs = new URLSearchParams();
+  if (query) qs.set('q', query);
+  if (page !== '1') qs.set('page', page);
+
+  const { data, loading, error } = useFetch(`/stationery?${qs}`);
+
+  useEffect(() => setTerm(query), [query]);
+
+  const goToPage = (n) => {
+    const next = new URLSearchParams(params);
+    if (n <= 1) next.delete('page');
+    else next.set('page', String(n));
+    setParams(next);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10">
@@ -19,7 +37,12 @@ export default function Stationery() {
         </div>
 
         <form
-          onSubmit={(e) => { e.preventDefault(); setQuery(term.trim()); }}
+          onSubmit={(e) => {
+            e.preventDefault();
+            const next = new URLSearchParams();
+            if (term.trim()) next.set('q', term.trim());
+            setParams(next);
+          }}
           className="flex w-full max-w-xs gap-2"
         >
           <input
@@ -51,9 +74,12 @@ export default function Stationery() {
           actionTo="/shop"
         />
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {data.books.map((b) => <BookCard key={b.id} book={b} />)}
-        </div>
+        <>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            {data.books.map((b) => <BookCard key={b.id} book={b} />)}
+          </div>
+          {data.pagination && <Pagination pagination={data.pagination} onPage={goToPage} />}
+        </>
       )}
     </div>
   );

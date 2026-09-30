@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import BookCard from '../components/BookCard';
-import { Spinner, EmptyState, Alert, inputClass } from '../components/ui';
+import { Spinner, EmptyState, Alert, inputClass, Pagination } from '../components/ui';
 import { useFetch } from '../lib/useFetch';
 import { useApp } from '../context/AppContext';
 import Aos from '../components/Aos';
@@ -12,9 +12,11 @@ export default function Shop() {
 
   const cat = params.get('cat') || '';
   const q = params.get('q') || '';
+  const page = params.get('page') || '1';
   const query = new URLSearchParams();
   if (cat) query.set('cat', cat);
   if (q) query.set('q', q);
+  if (page !== '1') query.set('page', page);
 
   const { data, loading, error } = useFetch(`/books?${query}`);
 
@@ -29,15 +31,24 @@ export default function Shop() {
     setParams(next);
   };
 
+  const goToPage = (n) => {
+    const next = new URLSearchParams(params);
+    if (n <= 1) next.delete('page');
+    else next.set('page', String(n));
+    setParams(next);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const heading = data?.category?.name || (q ? `Results for “${q}”` : 'All books');
+  const total = data?.pagination?.total;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10">
       <Aos className="mb-8" animation="fade-down">
         <h1 className="font-display text-3xl text-slate-900">{heading}</h1>
-        {!loading && data && (
+        {!loading && data && total != null && (
           <p className="mt-1 text-sm text-slate-500">
-            {data.books.length} {data.books.length === 1 ? 'title' : 'titles'}
+            {total} {total === 1 ? 'title' : 'titles'}
           </p>
         )}
 
@@ -114,9 +125,14 @@ export default function Shop() {
               actionTo="/shop"
             />
           ) : (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
-              {data.books.map((b) => <BookCard key={b.id} book={b} />)}
-            </div>
+            <>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+                {data.books.map((b) => <BookCard key={b.id} book={b} />)}
+              </div>
+              {data.pagination && (
+                <Pagination pagination={data.pagination} onPage={goToPage} />
+              )}
+            </>
           )}
         </div>
       </Aos>

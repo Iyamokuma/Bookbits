@@ -7,7 +7,10 @@ import {
   fetchDealBooks,
   fetchFeaturedBooks,
   fetchNewArrivalBooks,
+  countBooksForShop,
+  countStationeryBooks,
   fetchStationeryBooks,
+  fetchStationeryBooksPage,
   fetchCategoriesForNav,
   fetchRandomBooksGroupedByCategory,
   bookCoverUrl,
@@ -15,6 +18,7 @@ import {
 } from '../lib/books.js';
 import { bookSupportsCoverOptions } from '../lib/cart.js';
 import { asyncRoute, notFound } from '../lib/http.js';
+import { pageParam, paginationMeta, STORE_BOOKS_PER_PAGE } from '../lib/storefront.js';
 
 const router = Router();
 
@@ -74,10 +78,10 @@ router.get(
   '/home',
   asyncRoute(async (req, res) => {
     const [featured, newArrivals, deals, stationery, byCategory, posts] = await Promise.all([
-      fetchFeaturedBooks(8),
-      fetchNewArrivalBooks(8),
-      fetchDealBooks(8),
-      fetchStationeryBooks(8),
+      fetchFeaturedBooks(200),
+      fetchNewArrivalBooks(200),
+      fetchDealBooks(200),
+      fetchStationeryBooks(200),
       fetchRandomBooksGroupedByCategory(8),
       query(
         `SELECT id, title, slug, excerpt, cover_image, published_at FROM blogs
@@ -106,15 +110,28 @@ router.get(
   asyncRoute(async (req, res) => {
     const catSlug = req.query.cat ? String(req.query.cat) : null;
     const search = req.query.q ? String(req.query.q).trim() : '';
+    const page = pageParam(req.query.page);
 
-    const [books, category] = await Promise.all([
-      fetchBooksForShop({ catSlug, search }),
+    const [total, category] = await Promise.all([
+      countBooksForShop({ catSlug, search }),
       catSlug
         ? queryOne('SELECT slug, name FROM categories WHERE slug = $1 LIMIT 1', [catSlug])
         : Promise.resolve(null),
     ]);
+    const pagination = paginationMeta(page, total);
+    const books = await fetchBooksForShop({
+      catSlug,
+      search,
+      page: pagination.page,
+      perPage: STORE_BOOKS_PER_PAGE,
+    });
 
-    res.json({ books: books.map(presentBook), category, search });
+    res.json({
+      books: books.map(presentBook),
+      category,
+      search,
+      pagination,
+    });
   })
 );
 
@@ -132,15 +149,22 @@ router.get(
 router.get(
   '/stationery',
   asyncRoute(async (req, res) => {
-    const search = String(req.query.q || '').trim().toLowerCase();
-    let books = await fetchStationeryBooks(200);
-    if (search) {
-      books = books.filter(
-        (b) =>
-          b.title.toLowerCase().includes(search) || b.author.toLowerCase().includes(search)
-      );
-    }
-    res.json({ books: books.map(presentBook), search });
+    const search = String(req.query.q || '').trim();
+    const page = pageParam(req.query.page);
+
+    const total = await countStationeryBooks(search);
+    const pagination = paginationMeta(page, total);
+    const books = await fetchStationeryBooksPage({
+      search,
+      page: pagination.page,
+      perPage: STORE_BOOKS_PER_PAGE,
+    });
+
+    res.json({
+      books: books.map(presentBook),
+      search,
+      pagination,
+    });
   })
 );
 

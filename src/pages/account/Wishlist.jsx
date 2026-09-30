@@ -1,4 +1,5 @@
 import BookCard from '../../components/BookCard';
+import PaginatedBookGrid from '../../components/PaginatedBookGrid';
 import { Spinner, EmptyState, Alert } from '../../components/ui';
 import { useFetch } from '../../lib/useFetch';
 import { useApp } from '../../context/AppContext';
@@ -33,9 +34,12 @@ export default function Wishlist() {
             actionTo="/shop"
           />
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {books.map((b) => <BookCard key={b.id} book={b} />)}
-          </div>
+          <PaginatedBookGrid
+            books={books}
+            className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4"
+          >
+            {(slice) => slice.map((b) => <BookCard key={b.id} book={b} />)}
+          </PaginatedBookGrid>
         )}
       </div>
     </div>

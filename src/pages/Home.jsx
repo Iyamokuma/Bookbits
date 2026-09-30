@@ -6,6 +6,7 @@ import { Spinner } from '../components/ui';
 import { categoryIcon, categoryTile } from '../lib/categoryIcons';
 import { ArrowRight, ChevronLeft, ChevronRight, ClockIcon } from '../components/icons';
 import Aos from '../components/Aos';
+import PaginatedCoverGrid from '../components/PaginatedCoverGrid';
 
 const SLIDE_MS = 5000;
 
@@ -292,29 +293,6 @@ function DealCountdown() {
   );
 }
 
-function CoverGrid({ books, badge, badgeClass, hoverClass }) {
-  return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:gap-5">
-      {books.map((book) => (
-        <Link key={book.id} to={`/book/${book.id}`} className="group block">
-          <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-slate-100 shadow-sm ring-1 ring-slate-900/5 transition group-hover:-translate-y-1 group-hover:shadow-md">
-            <img src={book.coverUrl} alt={book.title} loading="lazy"
-                 className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
-            <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-r from-black/20 to-transparent" aria-hidden="true" />
-            <span className={`absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase text-white shadow ${badgeClass}`}>
-              {badge}
-            </span>
-          </div>
-          <div className="mt-2 px-0.5">
-            <p className={`line-clamp-1 text-xs font-bold text-slate-800 transition sm:text-sm ${hoverClass}`}>{book.title}</p>
-            <p className="mt-0.5 text-[11px] text-slate-500 sm:text-xs">{book.author}</p>
-          </div>
-        </Link>
-      ))}
-    </div>
-  );
-}
-
 const EmptyNote = ({ children }) => (
   <p className="rounded-xl border border-dashed border-slate-200 bg-white px-6 py-10 text-center text-sm text-slate-600">{children}</p>
 );
@@ -322,10 +300,10 @@ const EmptyNote = ({ children }) => (
 export default function Home() {
   const { data, loading } = useFetch('/home');
 
-  const featured = (data?.featured || []).slice(0, 8);
-  const deals = (data?.deals || []).slice(0, 8);
-  const newArrivals = (data?.newArrivals || []).slice(0, 8);
-  const stationery = (data?.stationery || []).slice(0, 8);
+  const featured = data?.featured || [];
+  const deals = data?.deals || [];
+  const newArrivals = data?.newArrivals || [];
+  const stationery = data?.stationery || [];
   const byCategory = data?.byCategory || [];
 
   return (
@@ -356,7 +334,7 @@ export default function Home() {
                       View all in {group.name} ›
                     </Link>
                   </div>
-                  <CoverGrid
+                  <PaginatedCoverGrid
                     books={group.books}
                     badge={group.name}
                     badgeClass="bg-slate-800/85"
@@ -377,7 +355,7 @@ export default function Home() {
               <h2 id="featured-heading" className="font-serif text-2xl font-bold text-slate-900 sm:text-3xl">Featured</h2>
               <p className="mt-1 text-sm text-slate-500">Our booksellers' current picks.</p>
             </div>
-            <CoverGrid books={featured} badge="Featured" badgeClass="bg-brand-700" hoverClass="group-hover:text-brand-700" />
+            <PaginatedCoverGrid books={featured} badge="Featured" badgeClass="bg-brand-700" hoverClass="group-hover:text-brand-700" />
           </div>
         </Aos>
       )}
@@ -396,7 +374,7 @@ export default function Home() {
           {loading ? <Spinner /> : deals.length === 0 ? (
             <EmptyNote>Mark books as “Daily deal” in the admin dashboard to show them here.</EmptyNote>
           ) : (
-            <CoverGrid books={deals} badge="Deal" badgeClass="bg-brand" hoverClass="group-hover:text-brand" />
+            <PaginatedCoverGrid books={deals} badge="Deal" badgeClass="bg-brand" hoverClass="group-hover:text-brand" />
           )}
 
           <div className="mt-8 text-center">
@@ -419,7 +397,7 @@ export default function Home() {
           {loading ? <Spinner /> : newArrivals.length === 0 ? (
             <EmptyNote>Mark books as “New arrival” in the admin dashboard to show them here.</EmptyNote>
           ) : (
-            <CoverGrid books={newArrivals} badge="New" badgeClass="bg-emerald-600" hoverClass="group-hover:text-emerald-700" />
+            <PaginatedCoverGrid books={newArrivals} badge="New" badgeClass="bg-emerald-600" hoverClass="group-hover:text-emerald-700" />
           )}
         </div>
       </Aos>
@@ -435,7 +413,7 @@ export default function Home() {
               </div>
               <Link to="/stationery" className="text-sm font-semibold text-accent-600 transition hover:text-accent-700">View all stationery ›</Link>
             </div>
-            <CoverGrid books={stationery} badge="Stationery" badgeClass="bg-accent-500" hoverClass="group-hover:text-accent-600" />
+            <PaginatedCoverGrid books={stationery} badge="Stationery" badgeClass="bg-accent-500" hoverClass="group-hover:text-accent-600" />
           </div>
         </Aos>
       )}

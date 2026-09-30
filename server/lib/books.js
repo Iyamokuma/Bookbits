@@ -1,4 +1,5 @@
 import { query, queryOne } from '../db.js';
+import { STORE_BOOKS_PER_PAGE } from './storefront.js';
 
 const BOOK_SELECT = `
   SELECT b.*, c.slug AS cat_slug, c.name AS cat_name
@@ -30,25 +31,74 @@ export function bookCoverUrl(row) {
   return '/img/covers/' + c.replace(/^\/+/, '');
 }
 
-export async function fetchBooksForShop({ catSlug = null, search = '', limit = 120 } = {}) {
-  const params = [];
-  let sql = BOOK_SELECT + ' WHERE b.is_active = TRUE';
-
+function shopFilters(catSlug, search, params) {
+  let where = ' WHERE b.is_active = TRUE AND c.is_active = TRUE';
   if (catSlug) {
     params.push(catSlug);
-    sql += ` AND c.slug = $${params.length}`;
+    where += ` AND c.slug = $${params.length}`;
   }
   if (search) {
     params.push(`%${search}%`);
-    // ILIKE is Postgres' case-insensitive LIKE, matching MySQL's default
-    // case-insensitive collation behaviour in the original queries.
-    sql += ` AND (b.title ILIKE $${params.length} OR b.author ILIKE $${params.length} OR COALESCE(b.isbn, '') ILIKE $${params.length})`;
+    where += ` AND (b.title ILIKE $${params.length} OR b.author ILIKE $${params.length} OR COALESCE(b.isbn, '') ILIKE $${params.length})`;
   }
+  return where;
+}
 
-  params.push(limit);
-  sql += ` ORDER BY b.created_at DESC LIMIT $${params.length}`;
+export async function countBooksForShop({ catSlug = null, search = '' } = {}) {
+  const params = [];
+  const where = shopFilters(catSlug, search, params);
+  const row = await queryOne(
+    `SELECT COUNT(*)::int AS n FROM books b INNER JOIN categories c ON c.id = b.category_id${where}`,
+    params
+  );
+  return row?.n ?? 0;
+}
 
-  return query(sql, params);
+export async function fetchBooksForShop({
+  catSlug = null,
+  search = '',
+  page = 1,
+  perPage = STORE_BOOKS_PER_PAGE,
+} = {}) {
+  const params = [];
+  const where = shopFilters(catSlug, search, params);
+  const offset = (Math.max(1, page) - 1) * perPage;
+  params.push(perPage, offset);
+
+  return query(
+    BOOK_SELECT +
+      `${where} ORDER BY b.created_at DESC LIMIT $${params.length - 1} OFFSET $${params.length}`,
+    params
+  );
+}
+
+export async function countStationeryBooks(search = '') {
+  const params = [];
+  let where = ' WHERE b.is_active = TRUE AND c.is_active = TRUE AND b.is_book_bundle = TRUE';
+  if (search) {
+    params.push(`%${search}%`);
+    where += ` AND (b.title ILIKE $${params.length} OR b.author ILIKE $${params.length})`;
+  }
+  const row = await queryOne(
+    `SELECT COUNT(*)::int AS n FROM books b INNER JOIN categories c ON c.id = b.category_id${where}`,
+    params
+  );
+  return row?.n ?? 0;
+}
+
+export async function fetchStationeryBooksPage({ search = '', page = 1, perPage = STORE_BOOKS_PER_PAGE } = {}) {
+  const params = [];
+  let where = ' WHERE b.is_active = TRUE AND c.is_active = TRUE AND b.is_book_bundle = TRUE';
+  if (search) {
+    params.push(`%${search}%`);
+    where += ` AND (b.title ILIKE $${params.length} OR b.author ILIKE $${params.length})`;
+  }
+  const offset = (Math.max(1, page) - 1) * perPage;
+  params.push(perPage, offset);
+  return query(
+    BOOK_SELECT + `${where} ORDER BY b.updated_at DESC LIMIT $${params.length - 1} OFFSET $${params.length}`,
+    params
+  );
 }
 
 export async function fetchBookById(id) {
