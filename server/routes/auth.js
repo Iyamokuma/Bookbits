@@ -47,12 +47,23 @@ router.post(
     const user = await createUser({ name, email, password, verifyToken: token });
     const mail = await sendVerificationEmail(user, token);
 
+    // Sign them in immediately so they can check out; verification is still
+    // encouraged but must not block paying for items already in the cart.
+    await regenerate(req);
+    req.session.userId = user.id;
+    try {
+      await cart.mergeGuestIntoUser(req.session, user.id);
+    } catch (err) {
+      console.error('[register] cart merge failed:', err);
+    }
+
     res.status(201).json({
       user: publicUser(user),
+      cartCount: cart.totalQty(req.session),
       emailSent: mail.ok,
       message: mail.ok
-        ? 'Account created. Check your inbox for a link to verify your email address.'
-        : 'Account created, but we could not send the verification email. You can still sign in.',
+        ? 'Account created — you are signed in. We also sent a link to verify your email when you have a moment.'
+        : 'Account created and you are signed in. We could not send the verification email just now; you can resend it from your account page.',
     });
   })
 );

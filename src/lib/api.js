@@ -19,7 +19,18 @@ export class ApiError extends Error {
   }
 }
 
-async function request(method, path, body, { isFormData = false } = {}) {
+async function refreshCsrfToken() {
+  const res = await fetch('/api/session', { credentials: 'same-origin' });
+  if (!res.ok) return false;
+  const session = await res.json();
+  if (session?.csrfToken) {
+    csrfToken = session.csrfToken;
+    return true;
+  }
+  return false;
+}
+
+async function request(method, path, body, { isFormData = false, csrfRetried = false } = {}) {
   const headers = {};
   if (csrfToken) headers['x-csrf-token'] = csrfToken;
   if (body !== undefined && !isFormData) headers['Content-Type'] = 'application/json';
@@ -38,6 +49,10 @@ async function request(method, path, body, { isFormData = false } = {}) {
     payload = await res.json();
   } catch {
     throw new ApiError(res.status, 'The server sent an unexpected response.');
+  }
+
+  if (res.status === 419 && !csrfRetried && (await refreshCsrfToken())) {
+    return request(method, path, body, { isFormData, csrfRetried: true });
   }
 
   if (!res.ok) {

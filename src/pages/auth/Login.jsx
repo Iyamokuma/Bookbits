@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import AuthCard from './AuthCard';
-import { Alert, Field, inputClass } from '../../components/ui';
+import { Alert, Field, Spinner, inputClass } from '../../components/ui';
 import GoogleSignIn from '../../components/GoogleSignIn';
 import { api } from '../../lib/api';
 import { useApp } from '../../context/AppContext';
 
 export default function Login() {
-  const { setUser, setCartCount, notify } = useApp();
+  const { setUser, setCartCount, notify, ready } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -25,12 +25,14 @@ export default function Login() {
       setUser(res.user);
       setCartCount(res.cartCount);
       notify(`Welcome back, ${res.user.name.split(' ')[0]}.`);
-      navigate(location.state?.from || '/account', { replace: true });
+      navigate(location.state?.from || '/checkout', { replace: true });
     } catch (err) {
       setError(err.message);
       setBusy(false);
     }
   };
+
+  if (!ready) return <Spinner label="Loading…" />;
 
   return (
     <AuthCard
@@ -39,7 +41,7 @@ export default function Login() {
       footer={
         <>
           New here?{' '}
-          <Link to="/register" className="font-semibold text-brand-700 hover:underline">
+          <Link to="/register" state={location.state} className="font-semibold text-brand-700 hover:underline">
             Create an account
           </Link>
         </>

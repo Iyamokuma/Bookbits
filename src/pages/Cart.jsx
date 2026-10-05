@@ -136,11 +136,22 @@ export default function Cart() {
           </p>
 
           <button
-            onClick={() => navigate(user ? '/checkout' : '/login')}
+            onClick={() =>
+              navigate(user ? '/checkout' : '/login', user ? undefined : { state: { from: '/checkout' } })
+            }
             className="mt-5 h-11 w-full rounded-lg bg-brand-700 text-sm font-semibold text-white hover:bg-brand-800"
           >
             {user ? 'Proceed to checkout' : 'Sign in to check out'}
           </button>
+          {!user && (
+            <Link
+              to="/register"
+              state={{ from: '/checkout' }}
+              className="mt-3 block text-center text-sm font-semibold text-brand-700 hover:underline"
+            >
+              Or create an account
+            </Link>
+          )}
           <Link
             to="/shop"
             className="mt-3 block text-center text-xs font-medium text-brand-700 hover:underline"
