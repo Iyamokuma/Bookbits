@@ -80,22 +80,40 @@ function Hero() {
       }}
     >
       <div
-        className="flex h-full transition-transform duration-700 ease-in-out will-change-transform"
+        className="flex h-full min-h-[560px] transition-transform duration-700 ease-in-out will-change-transform md:min-h-0 md:h-full"
         style={{ width: `${total * 100}%`, transform: `translateX(-${index * (100 / total)}%)` }}
       >
         {HERO_SLIDES.map((slide, i) => (
           <div
             key={slide.badge}
-            className="relative flex h-full shrink-0 items-center overflow-hidden"
-            style={{ width: `${100 / total}%`, background: `linear-gradient(135deg, ${slide.from} 0%, ${slide.to} 100%)` }}
+            className="relative h-full min-h-[560px] shrink-0 overflow-hidden md:min-h-0"
+            style={{ width: `${100 / total}%` }}
           >
-            <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full opacity-20 blur-3xl" style={{ background: slide.accent }} aria-hidden="true" />
-            <div className="pointer-events-none absolute -bottom-16 left-1/3 h-48 w-48 rounded-full opacity-10 blur-2xl" style={{ background: slide.accent }} aria-hidden="true" />
+            <img
+              src={slide.image}
+              alt={slide.imageAlt}
+              loading={i === 0 ? 'eager' : 'lazy'}
+              className="absolute inset-0 h-full w-full object-cover object-center"
+            />
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `linear-gradient(105deg, ${slide.from} 0%, ${slide.from}e8 40%, ${slide.to}99 65%, ${slide.to}55 100%)`,
+              }}
+              aria-hidden="true"
+            />
+            <div
+              className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full opacity-20 blur-3xl"
+              style={{ background: slide.accent }}
+              aria-hidden="true"
+            />
 
-            <div className="relative z-10 mx-auto flex w-full max-w-7xl items-center gap-8 px-5 sm:gap-12 sm:px-8 lg:px-10">
-              <div className="flex-1 py-8">
-                <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-widest"
-                     style={{ background: `${slide.accent}20`, color: slide.accent }}>
+            <div className="relative z-10 mx-auto flex h-full min-h-[560px] max-w-7xl items-center px-5 py-10 sm:px-8 md:min-h-0 lg:px-10">
+              <div className="max-w-xl">
+                <div
+                  className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-widest"
+                  style={{ background: `${slide.accent}20`, color: slide.accent }}
+                >
                   <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: slide.accent }} />
                   {slide.eyebrow}
                 </div>
@@ -111,7 +129,7 @@ function Hero() {
                   </span>
                 </h1>
 
-                <p className="mt-3 max-w-xs text-sm leading-relaxed text-white/70 sm:max-w-sm sm:text-base">{slide.sub}</p>
+                <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/85 sm:text-base">{slide.sub}</p>
 
                 <div className="mt-6 flex flex-wrap items-center gap-3">
                   <Link
@@ -124,21 +142,6 @@ function Hero() {
                   </Link>
                   <span className="rounded-full border border-white/25 px-3 py-1.5 text-xs font-semibold text-white/80">{slide.badge}</span>
                 </div>
-
-                <div className="relative mt-6 overflow-hidden rounded-2xl shadow-lg ring-1 ring-white/20 md:hidden">
-                  <img src={slide.image} alt={slide.imageAlt} width="320" height="320"
-                       loading={i === 0 ? 'eager' : 'lazy'}
-                       className="aspect-square w-full max-w-xs object-cover" />
-                </div>
-              </div>
-
-              <div className="relative hidden shrink-0 md:block" style={{ width: 380, height: 380 }}>
-                <div className="absolute inset-0 overflow-hidden rounded-2xl shadow-[0_28px_55px_rgba(2,6,23,0.45)] ring-1 ring-white/20">
-                  <img src={slide.image} alt={slide.imageAlt} width="380" height="380"
-                       loading={i === 0 ? 'eager' : 'lazy'}
-                       className="h-full w-full object-cover" />
-                </div>
-                <div className="absolute -bottom-3 left-1/2 h-10 w-56 -translate-x-1/2 rounded-full opacity-40 blur-xl" style={{ background: slide.accent }} aria-hidden="true" />
               </div>
             </div>
           </div>
