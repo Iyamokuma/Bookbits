@@ -298,6 +298,33 @@ CREATE TABLE IF NOT EXISTS newsletter_subscribers (
     unsubscribed_at TIMESTAMPTZ  NULL
 );
 
+-- Small key/value store for things the admin edits from the dashboard: the
+-- navigation menu, the delivery fee, and where order notifications go. A row
+-- that is missing means "use the built-in default", so an empty table is valid.
+CREATE TABLE IF NOT EXISTS site_settings (
+    key        VARCHAR(64) PRIMARY KEY,
+    value      JSONB       NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Content pages the admin creates (About us, FAQ, ...), served at /pages/<slug>.
+-- `body` is HTML that has already been sanitised on the way in.
+CREATE TABLE IF NOT EXISTS pages (
+    id               INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    title            VARCHAR(200) NOT NULL,
+    slug             VARCHAR(200) NOT NULL UNIQUE,
+    meta_description VARCHAR(300) NULL,
+    body             TEXT         NOT NULL DEFAULT '',
+    cover_image      VARCHAR(500) NULL,
+    is_published     BOOLEAN      NOT NULL DEFAULT TRUE,
+    created_at       TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    updated_at       TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+
+DROP TRIGGER IF EXISTS pages_updated_at ON pages;
+CREATE TRIGGER pages_updated_at BEFORE UPDATE ON pages
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
 -- ------------------------------------------------------------
 -- SEED — default categories
 -- ------------------------------------------------------------

@@ -12,6 +12,7 @@ import { loadUser, csrf } from './middleware.js';
 import apiRoutes from './routes/index.js';
 import paymentRoutes from './routes/payments.js';
 import webhookRoutes from './routes/webhooks.js';
+import shareRoutes from './routes/share.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.join(__dirname, '..');
@@ -26,7 +27,11 @@ export function createApp() {
   // are mounted ahead of the body parsers, the session, and the CSRF guard.
   app.use('/api/payment/webhook', express.raw({ type: '*/*' }), webhookRoutes);
 
-  app.use(express.json());
+  // Shareable pages (/book/:id, /blog/:slug, /pages/:slug) with link-preview
+  // tags in the HTML. Ahead of the session so a crawler never gets a cookie.
+  app.use(shareRoutes);
+
+  app.use(express.json({ limit: '2mb' }));
   app.use(express.urlencoded({ extended: true }));
 
   const PgStore = connectPgSimple(session);

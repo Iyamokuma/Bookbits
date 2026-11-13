@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { config, storePhoneTel } from '../config.js';
 import * as cart from '../lib/cart.js';
 import { googleEnabled } from '../lib/auth.js';
+import { getNav } from '../lib/settings.js';
 import { asyncRoute, publicUser } from '../lib/http.js';
 
 const router = Router();
@@ -27,6 +28,8 @@ router.get(
       // Public numeric ID — required for the browser pixel script.
       metaPixelId:
         config.meta.enabled && config.meta.pixelId ? config.meta.pixelId : '',
+      // The header menu, as arranged under Admin → Navigation.
+      nav: await getNav(),
     });
   })
 );

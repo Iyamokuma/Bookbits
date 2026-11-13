@@ -1,6 +1,13 @@
 import crypto from 'node:crypto';
 import { findUserById } from './lib/auth.js';
 import * as cart from './lib/cart.js';
+import { unauthorized } from './lib/http.js';
+
+/** Gate for every /api/admin route except sign-in and sign-out. */
+export function requireAdmin(req, res, next) {
+  if (req.session.isAdmin !== true) return next(unauthorized('Admin sign-in required.'));
+  next();
+}
 
 /** Load the signed-in user and hydrate their saved cart. */
 export async function loadUser(req, res, next) {

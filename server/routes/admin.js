@@ -19,7 +19,7 @@ import {
   sendOrderUpdateEmail,
 } from '../lib/mailer.js';
 import { asyncRoute, unauthorized, badRequest, notFound } from '../lib/http.js';
-import { regenerateSession } from '../middleware.js';
+import { regenerateSession, requireAdmin } from '../middleware.js';
 
 const router = Router();
 
@@ -51,10 +51,7 @@ router.post('/admin/logout', (req, res) => {
 });
 
 // Everything past this point requires an admin session.
-router.use('/admin', (req, res, next) => {
-  if (req.session.isAdmin !== true) return next(unauthorized('Admin sign-in required.'));
-  next();
-});
+router.use('/admin', requireAdmin);
 
 const paginate = (page, total) => ({
   page,

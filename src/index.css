@@ -2,6 +2,68 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Content written in the admin page editor. Shared by the editor itself and
+ * the published page, so what the admin sees is what visitors get.
+ */
+@layer components {
+  .rich-content {
+    @apply text-[15px] leading-relaxed text-slate-700;
+    overflow-wrap: anywhere;
+  }
+  .rich-content > * + * {
+    margin-top: 1em;
+  }
+  .rich-content h2 {
+    @apply font-display text-2xl leading-snug text-slate-900;
+    margin-top: 1.6em;
+  }
+  .rich-content h3 {
+    @apply text-lg font-bold leading-snug text-slate-900;
+    margin-top: 1.4em;
+  }
+  .rich-content h4 {
+    @apply font-bold text-slate-900;
+  }
+  .rich-content > :first-child {
+    margin-top: 0;
+  }
+  .rich-content strong,
+  .rich-content b {
+    @apply font-bold text-slate-900;
+  }
+  .rich-content a {
+    @apply text-brand-700 underline underline-offset-2 hover:text-brand-800;
+  }
+  .rich-content ul {
+    @apply list-disc pl-6;
+  }
+  .rich-content ol {
+    @apply list-decimal pl-6;
+  }
+  .rich-content li + li {
+    margin-top: 0.35em;
+  }
+  .rich-content blockquote {
+    @apply border-l-4 border-brand-200 pl-4 italic text-slate-600;
+  }
+  .rich-content img {
+    @apply h-auto max-w-full rounded-xl;
+  }
+  .rich-content hr {
+    @apply my-8 border-slate-200;
+  }
+  .rich-content figcaption {
+    @apply mt-2 text-center text-xs text-slate-500;
+  }
+
+  /* Placeholder for the empty editor. */
+  .rte-surface:empty::before {
+    content: attr(data-placeholder);
+    @apply pointer-events-none text-slate-400;
+  }
+}
+
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar {
     display: none;

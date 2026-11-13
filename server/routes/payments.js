@@ -30,23 +30,42 @@ export async function fulfilOrder({ order, gateway, verification, session, req }
 
   await cart.clearForUser(session ?? { cart: {} }, paidOrder.user_id);
 
-  // Email failures must never roll back a successful payment.
-  Promise.allSettled([
-    sendOrderConfirmation(user, paidOrder, items),
-    sendAdminOrderNotification(paidOrder, user, items),
-    trackPurchase({
-      order: paidOrder,
-      user,
-      items,
-      attribution: req?.session?.metaAttribution,
-    }),
-  ]).then((results) => {
-    for (const r of results) {
-      if (r.status === 'rejected') console.error('[payment] side effect failed:', r.reason);
+  // Awaited, not fired and forgotten. On Vercel the function is frozen the
+  // moment the response goes out, so anything still in flight is lost — which
+  // is how every order confirmation went missing. Failures are logged and can
+  // never undo the payment; the timeout keeps a slow mail API from holding up
+  // the customer's redirect.
+  const sideEffects = [
+    ['customer confirmation email', sendOrderConfirmation(user, paidOrder, items)],
+    ['shop notification email', sendAdminOrderNotification(paidOrder, user, items)],
+    [
+      'Meta purchase event',
+      trackPurchase({ order: paidOrder, user, items, attribution: req?.session?.metaAttribution }),
+    ],
+  ];
+  const results = await Promise.allSettled(
+    sideEffects.map(([, promise]) => withTimeout(promise, SIDE_EFFECT_TIMEOUT_MS))
+  );
+  results.forEach((r, i) => {
+    const label = sideEffects[i][0];
+    if (r.status === 'rejected') {
+      console.error(`[payment] order #${paidOrder.id}: ${label} failed:`, r.reason);
+    } else if (r.value && r.value.ok === false) {
+      console.error(`[payment] order #${paidOrder.id}: ${label} not sent:`, r.value.error);
     }
   });
 
   return paidOrder;
+}
+
+const SIDE_EFFECT_TIMEOUT_MS = 10_000;
+
+function withTimeout(promise, ms) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`timed out after ${ms} ms`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 }
 
 /**

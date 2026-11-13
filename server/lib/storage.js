@@ -60,12 +60,12 @@ export async function ensureBucket() {
  * an absolute URL for object storage, or a `uploads/covers/...` relative path
  * for the local-disk fallback. Both forms are understood by bookCoverUrl().
  */
-export async function saveImage(file) {
+export async function saveImage(file, { prefix = 'cover' } = {}) {
   if (!file) return null;
 
   const ext = EXTENSIONS[file.mimetype];
   if (!ext) throw new Error('Unsupported image type.');
-  const name = `cover_${crypto.randomBytes(8).toString('hex')}.${ext}`;
+  const name = `${prefix}_${crypto.randomBytes(8).toString('hex')}.${ext}`;
 
   if (!usingObjectStorage()) {
     // Serverless filesystems are read-only and per-invocation, so a local write

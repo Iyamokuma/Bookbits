@@ -2,10 +2,17 @@ import { Link, useParams } from 'react-router-dom';
 import { Spinner, EmptyState } from '../components/ui';
 import { useFetch } from '../lib/useFetch';
 import { formatDate } from '../lib/format';
+import { usePageMeta } from '../lib/usePageMeta';
 
 export default function BlogPost() {
   const { slug } = useParams();
   const { data, loading, error } = useFetch(`/blog/${slug}`);
+
+  usePageMeta({
+    title: data?.title,
+    description: data?.excerpt || data?.body,
+    image: data?.coverUrl,
+  });
 
   if (loading) return <Spinner />;
   if (error) {

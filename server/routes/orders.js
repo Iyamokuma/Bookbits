@@ -10,12 +10,11 @@ import {
   isGatewayConfigured,
 } from '../lib/payments.js';
 import { round2 } from '../lib/money.js';
+import { getShippingFee } from '../lib/settings.js';
 import { asyncRoute, unauthorized, unprocessable, notFound, badRequest } from '../lib/http.js';
 import { captureMetaAttribution } from '../lib/meta.js';
 
 const router = Router();
-
-const SHIPPING_FEE = 1500;
 
 const requireUser = (req) => {
   if (!req.user) throw unauthorized();
@@ -82,14 +81,17 @@ router.get(
   '/checkout',
   asyncRoute(async (req, res) => {
     requireUser(req);
-    const lines = await cart.linesWithBooks(req.session);
+    const [lines, shippingFee] = await Promise.all([
+      cart.linesWithBooks(req.session),
+      getShippingFee(),
+    ]);
     const subtotal = cart.subtotal(lines);
 
     res.json({
       itemCount: cart.totalQty(req.session),
       subtotal,
-      shippingFee: SHIPPING_FEE,
-      total: round2(subtotal + SHIPPING_FEE),
+      shippingFee,
+      total: round2(subtotal + shippingFee),
       gateways: availableGateways().map((id) => ({ id, label: gatewayLabels[id] })),
     });
   })
@@ -115,11 +117,13 @@ router.post(
     }
     if (Object.keys(errors).length) throw unprocessable('Please check your details.', errors);
 
+    // Read at submit time, so the order is charged the fee in force right now.
+    // The order row keeps its own copy; later changes don't touch past orders.
     const order = await createOrder({
       userId: user.id,
       lines,
       shipping,
-      shippingFee: SHIPPING_FEE,
+      shippingFee: await getShippingFee(),
       notes: String(req.body.notes || '').trim() || null,
     });
 

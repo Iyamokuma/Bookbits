@@ -185,6 +185,55 @@ enum types, `ON DUPLICATE KEY UPDATE` became `ON CONFLICT`, and `LIKE` became
 ## Admin
 
 The dashboard lives at `/admin`, behind the credentials in `ADMIN_EMAIL` and
-`ADMIN_PASSWORD`. It covers orders (with status changes that email
-the customer automatically), products, categories, and the blog, paginated five
-rows at a time.
+`ADMIN_PASSWORD`. `ADMIN_EMAIL` is only a sign-in name; no email is sent to it.
+The dashboard covers:
+
+- **Orders**, with status changes that email the customer automatically.
+- **Products**, **categories** and the **blog**.
+- **Pages**: content pages such as About us or FAQ, served at
+  `/pages/<address>`. They're written in a rich-text editor with headings,
+  lists, links and uploaded images, and there's a raw-HTML mode. The server
+  sanitises every body before storing it (`server/lib/sanitize.js`). Ticking
+  "Show in navigation bar" adds the page to the menu. Renaming a page's address
+  updates its menu link, and deleting the page removes the link.
+- **Navigation**: the links in the storefront header, in order. Each link can
+  point at a store page, a custom page, a category, or any URL.
+- **Settings**:
+  - The **delivery fee** charged at checkout. Each order keeps the fee it was
+    charged.
+  - The **notification inbox(es)** that receive new-order and contact-form
+    emails. The page warns when an address's domain has no mail server, and can
+    send a test email.
+
+Lists are paginated five rows at a time. Settings live in the `site_settings`
+table, and a missing row falls back to the built-in default (₦1,500 delivery,
+the original menu, and `STORE_EMAIL` for notifications).
+
+## Order emails
+
+When a payment is verified, by the browser callback or the gateway webhook,
+whichever arrives first, two emails go out:
+
+- **The customer** gets an order confirmation with the items, subtotal,
+  delivery fee and total. Replies go to the shop inbox.
+- **The shop** gets a new-order notification at every address under
+  Settings → Order notifications. Replies go to the customer.
+
+Both are awaited before the response is sent. Vercel freezes a function as
+soon as it responds, so anything left running in the background is lost.
+The webhook replies to the gateway immediately and uses `waitUntil` to finish
+the work.
+
+## Link previews
+
+WhatsApp, Facebook, X, Telegram and other link-preview bots don't run
+JavaScript, so the SPA shell alone gives every link the same preview. For
+`/book/:id`, `/blog/:slug` and `/pages/:slug`, the server fills in the page's
+own title, description, image, product price and structured data
+(`server/routes/share.js`). Everything below `<head>` is the normal app.
+
+On Vercel, `vercel.json` routes only bot and crawler user agents to that
+function, so shoppers still get the SPA from the CDN. Every other route uses
+the site-wide defaults in `index.html`. Their absolute image URL comes from
+`BASE_URL` at build time. Covers over 300 KB, which WhatsApp would drop, are
+served through Supabase's image resizer.

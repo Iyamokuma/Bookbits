@@ -1,8 +1,19 @@
 import { Resend } from 'resend';
 import { config, absoluteUrl } from '../config.js';
 import { formatMoney } from './money.js';
+import { getNotificationEmails } from './settings.js';
 
 const resend = config.mail.resendApiKey ? new Resend(config.mail.resendApiKey) : null;
+
+/**
+ * The shop's own inbox, as set under Admin → Settings. Customer replies to
+ * order and contact emails are directed here so they reach a person instead of
+ * the no-reply sending address.
+ */
+async function shopInbox() {
+  const [first] = await getNotificationEmails();
+  return first || config.store.email;
+}
 
 const esc = (s) =>
   String(s ?? '')
@@ -143,36 +154,60 @@ export function sendPasswordResetEmail(email, name, token) {
   });
 }
 
-export function sendOrderConfirmation(user, order, items) {
+const totalsTable = (order, totalLabel) => {
+  const row = (label, value, strong = false) => `<tr>
+      <td style="padding:4px 0;color:${strong ? '#111827' : '#4b5563'};${strong ? 'font-weight:700;font-size:16px;' : ''}">${label}</td>
+      <td style="padding:4px 0;text-align:right;white-space:nowrap;${strong ? 'font-weight:700;font-size:16px;' : ''}">${esc(formatMoney(value))}</td>
+    </tr>`;
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:6px 0 18px;font-size:14px;">
+      ${row('Subtotal', order.subtotal)}
+      ${row('Delivery', order.shipping_fee)}
+      ${row(totalLabel, order.total, true)}
+    </table>`;
+};
+
+export async function sendOrderConfirmation(user, order, items) {
   return sendEmail({
     to: user.email,
-    subject: `Order #${order.id} confirmed`,
+    replyTo: await shopInbox(),
+    subject: `Order #${order.id} confirmed — thank you!`,
     html: `<p>Hi ${esc(user.name)},</p>
-      <p>Thank you — we've received your payment and your order is confirmed.</p>
+      <p>Thank you for shopping with ${esc(config.store.name)}. We've received your payment and
+         order #${order.id} is confirmed.</p>
       ${orderItemsTable(items)}
-      <p style="font-size:16px;"><strong>Total paid: ${esc(formatMoney(order.total))}</strong></p>
+      ${totalsTable(order, 'Total paid')}
       ${addressBlock(order)}
       <p>We'll email you again as soon as your order ships. Orders are typically processed within 1–3 business days.</p>
-      ${button(absoluteUrl(`/orders/${order.id}`), 'View your order')}`,
+      ${button(absoluteUrl(`/orders/${order.id}`), 'View your order')}
+      <p style="color:#6b7280;font-size:13px;">Questions about your order? Just reply to this email.</p>`,
   });
 }
 
-export function sendAdminOrderNotification(order, user, items) {
-  return sendEmail({
-    to: config.admin.email,
-    replyTo: user.email,
-    subject: `New paid order #${order.id} — ${formatMoney(order.total)}`,
-    html: `<p><strong>${esc(user.name)}</strong> (${esc(user.email)}) just paid for order #${order.id}.</p>
-      ${orderItemsTable(items)}
-      <p style="font-size:16px;"><strong>Total: ${esc(formatMoney(order.total))}</strong></p>
-      ${addressBlock(order)}
-      ${button(absoluteUrl('/admin/payments'), 'Open in dashboard')}`,
-  });
-}
-
-export function sendProcessingNotice(to, order, name) {
+/** Tells the shop a new order has been paid for, at every notification address. */
+export async function sendAdminOrderNotification(order, user, items) {
+  const to = await getNotificationEmails();
+  if (!to.length) {
+    return { ok: false, error: 'No order notification address is set (Admin → Settings).' };
+  }
   return sendEmail({
     to,
+    replyTo: user.email,
+    subject: `New order #${order.id} — ${formatMoney(order.total)} from ${user.name}`,
+    html: `<p><strong>New paid order.</strong> ${esc(user.name)} (<a href="mailto:${esc(user.email)}" style="color:#0b3d91;">${esc(user.email)}</a>)
+         has paid for order #${order.id}.</p>
+      ${orderItemsTable(items)}
+      ${totalsTable(order, 'Total paid')}
+      ${addressBlock(order)}
+      ${order.notes ? `<p><strong>Customer note:</strong><br>${esc(order.notes).replace(/\n/g, '<br>')}</p>` : ''}
+      ${button(absoluteUrl(`/admin/orders/${order.id}`), 'Open order in dashboard')}
+      <p style="color:#6b7280;font-size:13px;">Reply to this email to write to the customer.</p>`,
+  });
+}
+
+export async function sendProcessingNotice(to, order, name) {
+  return sendEmail({
+    to,
+    replyTo: await shopInbox(),
     subject: `Order #${order.id} is being processed`,
     html: `<p>Hi ${esc(name)},</p>
       <p>Good news — order #${order.id} is now being processed and prepared for dispatch.</p>
@@ -181,9 +216,10 @@ export function sendProcessingNotice(to, order, name) {
   });
 }
 
-export function sendShippedNotice(to, order, name) {
+export async function sendShippedNotice(to, order, name) {
   return sendEmail({
     to,
+    replyTo: await shopInbox(),
     subject: `Order #${order.id} has shipped`,
     html: `<p>Hi ${esc(name)},</p>
       <p>Your order #${order.id} is on its way. It will be delivered to the address below:</p>
@@ -194,9 +230,10 @@ export function sendShippedNotice(to, order, name) {
   });
 }
 
-export function sendDeliveryNotice(to, order, name) {
+export async function sendDeliveryNotice(to, order, name) {
   return sendEmail({
     to,
+    replyTo: await shopInbox(),
     subject: `Order #${order.id} delivered`,
     html: `<p>Hi ${esc(name)},</p>
       <p>Order #${order.id} has been marked as delivered. We hope you enjoy your books.</p>
@@ -208,10 +245,10 @@ export function sendDeliveryNotice(to, order, name) {
  * Forward a contact-form enquiry to the shop. Reply-to is the sender so staff
  * can answer straight from their inbox.
  */
-export function sendContactMessage({ name, email, phone, subject, message }) {
+export async function sendContactMessage({ name, email, phone, subject, message }) {
   const body = esc(message).replace(/\n/g, '<br>');
   return sendEmail({
-    to: config.store.email,
+    to: await getNotificationEmails(),
     subject: `Website enquiry: ${subject}`,
     replyTo: email,
     html: `<p><strong>${esc(name)}</strong> sent a message from the website.</p>
@@ -225,11 +262,11 @@ export function sendContactMessage({ name, email, phone, subject, message }) {
 }
 
 /** Acknowledgement so the sender knows the message arrived. */
-export function sendContactAcknowledgement({ name, email, subject }) {
+export async function sendContactAcknowledgement({ name, email, subject }) {
   return sendEmail({
     to: email,
     subject: 'We received your message',
-    replyTo: config.store.email,
+    replyTo: await shopInbox(),
     html: `<p>Hi ${esc(name)},</p>
       <p>Thanks for getting in touch about “${esc(subject)}”. We have your message and will reply
          within one business day.</p>
@@ -250,13 +287,26 @@ export function sendNewsletterWelcome(email) {
 }
 
 /** Free-form message composed by an admin on the order detail screen. */
-export function sendOrderUpdateEmail(to, subject, message, order) {
+export async function sendOrderUpdateEmail(to, subject, message, order) {
   const body = esc(message).replace(/\n/g, '<br>');
   return sendEmail({
     to,
     subject,
-    replyTo: config.store.email,
+    replyTo: await shopInbox(),
     html: `<p>${body}</p>
       ${order ? `<p style="color:#6b7280;font-size:13px;margin-top:24px;">Regarding order #${order.id}.</p>` : ''}`,
+  });
+}
+
+/** Sent from Admin → Settings to prove the notification inboxes receive mail. */
+export function sendTestEmail(to) {
+  return sendEmail({
+    to,
+    subject: `Test: ${config.store.name} order notifications`,
+    html: `<p>This is a test from your store dashboard.</p>
+      <p>If you're reading this, new-order notifications and contact-form messages will reach
+         this inbox.</p>
+      <p style="color:#6b7280;font-size:13px;">Sent from ${esc(config.mail.fromEmail)} at
+         ${esc(new Date().toUTCString())}.</p>`,
   });
 }

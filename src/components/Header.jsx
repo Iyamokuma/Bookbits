@@ -5,17 +5,40 @@ import { api } from '../lib/api';
 import {
   PhoneIcon, FacebookIcon, InstagramIcon, WhatsAppIcon, CartIcon, UserIcon,
   SearchIcon, HomeIcon, BookIcon, PencilIcon, NewspaperIcon, MenuIcon, CloseIcon, HeartIcon,
+  DocumentIcon, ExternalLinkIcon,
 } from './icons';
 
-const NAV = [
-  { to: '/', label: 'Home', Icon: HomeIcon },
-  { to: '/shop', label: 'Books', Icon: BookIcon },
-  { to: '/stationery', label: 'Stationery', Icon: PencilIcon },
-  { to: '/blog', label: 'Blog', Icon: NewspaperIcon },
-];
+const isExternal = (url) => /^(https?:|mailto:|tel:)/i.test(url);
+
+/** Icon for the mobile menu, picked from where the link goes. */
+function navIcon(url) {
+  if (isExternal(url)) return ExternalLinkIcon;
+  if (url === '/') return HomeIcon;
+  if (url.startsWith('/shop')) return BookIcon;
+  if (url.startsWith('/stationery')) return PencilIcon;
+  if (url.startsWith('/blog')) return NewspaperIcon;
+  return DocumentIcon;
+}
+
+/** A menu link: in-app navigation for our own pages, a plain link otherwise. */
+function NavItem({ item, className, children }) {
+  if (isExternal(item.url) || item.newTab) {
+    return (
+      <a
+        href={item.url}
+        className={className}
+        {...(item.newTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+      >
+        {children}
+      </a>
+    );
+  }
+  return <Link to={item.url} className={className}>{children}</Link>;
+}
 
 export default function Header() {
-  const { user, cartCount, store, setUser, setCartCount, notify } = useApp();
+  const { user, cartCount, store, setUser, setCartCount, notify, nav } = useApp();
+  const menu = nav || [];
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [term, setTerm] = useState('');
@@ -118,12 +141,11 @@ export default function Header() {
           </Link>
 
           <nav className="hidden md:flex md:items-center md:gap-5" aria-label="Primary">
-            {NAV.map((item) => (
-              <Link key={item.to} to={item.to} className="text-sm font-medium text-slate-700 transition hover:text-brand">
+            {menu.map((item, i) => (
+              <NavItem key={`${i}-${item.url}`} item={item} className="text-sm font-medium text-slate-700 transition hover:text-brand">
                 {item.label}
-              </Link>
+              </NavItem>
             ))}
-            <Link to="/shop" className="text-sm font-medium text-slate-700 transition hover:text-brand">Shop</Link>
           </nav>
 
           <form onSubmit={search} role="search" className="hidden min-w-0 flex-1 md:flex md:max-w-xs lg:max-w-sm">
@@ -221,13 +243,16 @@ export default function Header() {
           <div className="border-t border-slate-100 bg-white md:hidden">
             <div className="mx-auto max-w-7xl px-4 pb-5 pt-3 sm:px-6">
               <nav className="space-y-1" aria-label="Mobile navigation">
-                {NAV.map(({ to, label, Icon }) => (
-                  <Link key={to} to={to}
-                        className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 transition hover:bg-brand-muted hover:text-brand">
-                    <Icon className="h-5 w-5 text-slate-400" />
-                    {label}
-                  </Link>
-                ))}
+                {menu.map((item, i) => {
+                  const Icon = navIcon(item.url);
+                  return (
+                    <NavItem key={`${i}-${item.url}`} item={item}
+                             className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 transition hover:bg-brand-muted hover:text-brand">
+                      <Icon className="h-5 w-5 text-slate-400" />
+                      {item.label}
+                    </NavItem>
+                  );
+                })}
                 <Link to="/cart" className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 transition hover:bg-brand-muted hover:text-brand">
                   <CartIcon className="h-5 w-5 text-slate-400" />
                   Cart

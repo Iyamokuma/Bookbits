@@ -12,6 +12,7 @@ import authRoutes from './auth.js';
 import orderRoutes from './orders.js';
 import contactRoutes from './contact.js';
 import adminRoutes from './admin.js';
+import siteRoutes from './site.js';
 import { asyncRoute, notFound, ApiError } from '../lib/http.js';
 
 const router = Router();
@@ -24,6 +25,7 @@ router.use(authRoutes);
 router.use(orderRoutes);
 router.use(contactRoutes);
 router.use(adminRoutes);
+router.use(siteRoutes);
 
 router.get('/legal/:slug', (req, res, next) => {
   const page = legalPages[req.params.slug];

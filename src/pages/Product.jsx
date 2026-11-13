@@ -8,6 +8,7 @@ import { HeartIcon } from '../components/icons';
 import { api } from '../lib/api';
 import { formatMoney } from '../lib/format';
 import { trackMeta } from '../lib/metaPixel';
+import { usePageMeta } from '../lib/usePageMeta';
 
 export default function Product() {
   const { id } = useParams();
@@ -27,6 +28,14 @@ export default function Product() {
         : book.paperbackPrice
       : book.price
     : 0;
+
+  usePageMeta({
+    title: book ? `${book.title} by ${book.author}` : null,
+    description: book
+      ? `${formatMoney(price)}. ${book.description || `${book.title} by ${book.author}, delivered across Nigeria.`}`
+      : null,
+    image: book?.coverUrl,
+  });
 
   useEffect(() => {
     if (!book) return;

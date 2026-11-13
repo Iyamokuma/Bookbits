@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { waitUntil } from '@vercel/functions';
 import { verifyWebhookSignature, verifyPayment, GATEWAYS } from '../lib/payments.js';
 import { getOrder } from '../lib/orders.js';
 import { fulfilOrder } from './payments.js';
@@ -23,9 +24,15 @@ router.post('/', async (req, res) => {
   }
 
   // Acknowledge immediately; gateways retry on slow responses and we've already
-  // authenticated the payload.
+  // authenticated the payload. waitUntil keeps a Vercel function alive until
+  // fulfilment finishes — without it the instance is frozen once the 200 is
+  // sent, and the order is never marked paid or emailed. Outside Vercel it is
+  // a no-op and the promise simply runs on.
   res.sendStatus(200);
+  waitUntil(processWebhook(gateway, rawBody));
+});
 
+async function processWebhook(gateway, rawBody) {
   try {
     const payload = JSON.parse(rawBody.toString());
     const data = payload.data || {};
@@ -45,7 +52,7 @@ router.post('/', async (req, res) => {
   } catch (err) {
     console.error('[webhook] processing failed:', err);
   }
-});
+}
 
 /** References are formatted "<PREFIX>-<orderId>-<random>". */
 function extractOrderId(reference) {

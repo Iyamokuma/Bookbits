@@ -10,6 +10,9 @@ const NAV = [
   { to: '/admin/products', label: 'Products', icon: 'M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z' },
   { to: '/admin/categories', label: 'Categories', icon: 'M4 6h16M4 12h16M4 18h16' },
   { to: '/admin/blogs', label: 'Blog', icon: 'M4 4h16v16H4zM8 9h8M8 13h8M8 17h4' },
+  { to: '/admin/pages', label: 'Pages', icon: 'M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6' },
+  { to: '/admin/navigation', label: 'Navigation', icon: 'M3 5h18v4H3zM6 13h12M6 17h8' },
+  { to: '/admin/settings', label: 'Settings', icon: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z' },
 ];
 
 export default function AdminLayout() {
@@ -36,16 +39,16 @@ export default function AdminLayout() {
   return (
     <div className="min-h-screen bg-slate-100">
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 transform bg-brand-900 transition-transform lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 transform flex-col bg-brand-900 transition-transform lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex h-16 items-center gap-3 border-b border-white/10 px-5">
+        <div className="flex h-16 shrink-0 items-center gap-3 border-b border-white/10 px-5">
           <img src="/img/logo.png" alt="" className="h-8 w-auto brightness-0 invert" />
           <span className="text-sm font-semibold text-white">Dashboard</span>
         </div>
 
-        <nav className="space-y-1 p-3">
+        <nav className="flex-1 space-y-1 overflow-y-auto p-3">
           {NAV.map((item) => (
             <NavLink key={item.to} to={item.to} end={item.end} className={linkClass} onClick={() => setSidebarOpen(false)}>
               <svg className="h-4.5 w-4.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24" style={{ width: 18, height: 18 }}>
@@ -56,7 +59,7 @@ export default function AdminLayout() {
           ))}
         </nav>
 
-        <div className="absolute inset-x-0 bottom-0 space-y-1 border-t border-white/10 p-3">
+        <div className="shrink-0 space-y-1 border-t border-white/10 p-3">
           <a href="/" className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-brand-100 hover:bg-white/10 hover:text-white">
             View store
           </a>

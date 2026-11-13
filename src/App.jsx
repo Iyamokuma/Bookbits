@@ -16,6 +16,7 @@ import Contact from './pages/Contact';
 import Legal from './pages/Legal';
 import BlogIndex from './pages/BlogIndex';
 import BlogPost from './pages/BlogPost';
+import CustomPage from './pages/CustomPage';
 import NotFound from './pages/NotFound';
 
 import Login from './pages/auth/Login';
@@ -38,6 +39,10 @@ import AdminProductForm from './pages/admin/ProductForm';
 import AdminCategories from './pages/admin/Categories';
 import AdminBlogs from './pages/admin/Blogs';
 import AdminBlogForm from './pages/admin/BlogForm';
+import AdminPages from './pages/admin/Pages';
+import AdminPageForm from './pages/admin/PageForm';
+import AdminNavigation from './pages/admin/Navigation';
+import AdminSettings from './pages/admin/Settings';
 
 export default function App() {
   return (
@@ -52,6 +57,7 @@ export default function App() {
           <Route path="contact" element={<Contact />} />
           <Route path="blog" element={<BlogIndex />} />
           <Route path="blog/:slug" element={<BlogPost />} />
+          <Route path="pages/:slug" element={<CustomPage />} />
           <Route path="privacy" element={<Legal slug="privacy" />} />
           <Route path="terms" element={<Legal slug="terms" />} />
           <Route path="shipping" element={<Legal slug="shipping" />} />
@@ -87,6 +93,11 @@ export default function App() {
           <Route path="blogs" element={<AdminBlogs />} />
           <Route path="blogs/new" element={<AdminBlogForm />} />
           <Route path="blogs/:id/edit" element={<AdminBlogForm />} />
+          <Route path="pages" element={<AdminPages />} />
+          <Route path="pages/new" element={<AdminPageForm />} />
+          <Route path="pages/:id/edit" element={<AdminPageForm />} />
+          <Route path="navigation" element={<AdminNavigation />} />
+          <Route path="settings" element={<AdminSettings />} />
         </Route>
       </Routes>
 

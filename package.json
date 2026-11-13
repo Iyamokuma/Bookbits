@@ -20,6 +20,7 @@
     "mail:test": "node scripts/send-test-email.js"
   },
   "dependencies": {
+    "@vercel/functions": "^2.2.13",
     "aos": "^2.3.4",
     "bcryptjs": "^2.4.3",
     "connect-pg-simple": "^9.0.1",
@@ -32,7 +33,8 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.26.2",
-    "resend": "^3.4.0"
+    "resend": "^3.4.0",
+    "sanitize-html": "^2.18.2"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",

@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { waitUntil } from '@vercel/functions';
 import { query } from '../db.js';
 import {
   sendContactMessage,
@@ -35,8 +36,9 @@ router.post(
     }
 
     // A failed acknowledgement should not make the customer think their
-    // message was lost, since it already reached the shop.
-    sendContactAcknowledgement({ name, email, subject }).catch(() => {});
+    // message was lost, since it already reached the shop. waitUntil stops
+    // Vercel freezing the function before the send completes.
+    waitUntil(sendContactAcknowledgement({ name, email, subject }).catch(() => {}));
 
     res.status(201).json({
       message: "Thanks — your message is on its way. We'll reply within one business day.",
@@ -60,7 +62,7 @@ router.post(
       [email]
     );
 
-    if (row?.is_new) sendNewsletterWelcome(email).catch(() => {});
+    if (row?.is_new) waitUntil(sendNewsletterWelcome(email).catch(() => {}));
 
     res.status(201).json({ message: "You're subscribed. Watch your inbox for new arrivals." });
   })

@@ -22,6 +22,15 @@ const DEFAULT_STORE = {
   currencyCode: 'NGN',
 };
 
+// Used only if the session request fails; normally the menu comes from the
+// server, as arranged under Admin → Navigation.
+const FALLBACK_NAV = [
+  { label: 'Home', url: '/' },
+  { label: 'Books', url: '/shop' },
+  { label: 'Stationery', url: '/stationery' },
+  { label: 'Blog', url: '/blog' },
+];
+
 export function AppProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -30,6 +39,7 @@ export function AppProvider({ children }) {
   const [categories, setCategories] = useState([]);
   const [googleClientId, setGoogleClientId] = useState('');
   const [metaPixelId, setMetaPixelId] = useState('');
+  const [nav, setNav] = useState(null);
   const [wishlist, setWishlist] = useState([]);
   const [ready, setReady] = useState(false);
   const [toast, setToast] = useState(null);
@@ -44,6 +54,7 @@ export function AppProvider({ children }) {
     setStore({ ...DEFAULT_STORE, ...session.store });
     setGoogleClientId(session.googleClientId || '');
     setMetaPixelId(session.metaPixelId || '');
+    setNav(Array.isArray(session.nav) ? session.nav : FALLBACK_NAV);
     return session;
   }, []);
 
@@ -55,6 +66,7 @@ export function AppProvider({ children }) {
         await loadSession();
       } catch (err) {
         console.error('Could not start a session:', err);
+        setNav(FALLBACK_NAV);
       }
       try {
         setCategories(await api.get('/categories'));
@@ -117,6 +129,8 @@ export function AppProvider({ children }) {
       categories,
       googleClientId,
       metaPixelId,
+      nav,
+      setNav,
       wishlist,
       toggleWishlist,
       ready,
@@ -126,7 +140,7 @@ export function AppProvider({ children }) {
       loadSession,
     }),
     [
-      user, isAdmin, cartCount, store, categories, googleClientId, metaPixelId,
+      user, isAdmin, cartCount, store, categories, googleClientId, metaPixelId, nav,
       wishlist, toggleWishlist, ready, toast, notify, dismissToast, loadSession,
     ]
   );
