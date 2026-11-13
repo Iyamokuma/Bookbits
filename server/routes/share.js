@@ -6,7 +6,6 @@ import { formatMoney } from '../lib/money.js';
 import { htmlToText } from '../lib/sanitize.js';
 import {
   loadShell,
-  siteOrigin,
   requestOrigin,
   absolute,
   shareImageUrl,
@@ -143,7 +142,7 @@ async function pageMeta(req, origin) {
   return {
     title: fullTitle(page.title),
     shareTitle: page.title,
-    description: summarize(page.meta_description || htmlToText(page.body) || DEFAULT_DESCRIPTION),
+    description: summarize(page.meta_description || (await htmlToText(page.body)) || DEFAULT_DESCRIPTION),
     url: `${origin}/pages/${page.slug}`,
     image,
     card: cover ? 'summary_large_image' : 'summary',
@@ -151,7 +150,7 @@ async function pageMeta(req, origin) {
 }
 
 const render = (resolve) => async (req, res) => {
-  const origin = siteOrigin(req);
+  const origin = requestOrigin(req);
   let meta = null;
   let failed = false;
   try {

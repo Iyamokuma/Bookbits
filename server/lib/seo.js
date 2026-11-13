@@ -79,14 +79,12 @@ export async function loadShell(origin) {
 // URLs
 // --------------------------------------------------------------------------
 
-/** The public site URL: BASE_URL in production, else whatever host was asked for. */
-export function siteOrigin(req) {
-  const base = config.baseUrl;
-  if (base && !/\/\/(localhost|127\.0\.0\.1)(:|$)/.test(base)) return base;
-  return `${req.protocol}://${req.get('host')}`;
-}
-
-/** Scheme and host the request actually arrived on — used to reach this deployment's own CDN. */
+/**
+ * Scheme and host the request arrived on. Used for preview URLs, payment
+ * return links and reaching this deployment's own CDN. It's preferred over
+ * BASE_URL because it's the domain the visitor is actually on: a stale
+ * BASE_URL once pointed every return link at a deleted deployment.
+ */
 export const requestOrigin = (req) => `${req.protocol}://${req.get('host')}`;
 
 export function absolute(origin, url) {

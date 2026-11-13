@@ -11,6 +11,7 @@ import {
 } from '../lib/payments.js';
 import { round2 } from '../lib/money.js';
 import { getShippingFee } from '../lib/settings.js';
+import { requestOrigin } from '../lib/seo.js';
 import { asyncRoute, unauthorized, unprocessable, notFound, badRequest } from '../lib/http.js';
 import { captureMetaAttribution } from '../lib/meta.js';
 
@@ -131,7 +132,7 @@ router.post(
     req.session.metaAttribution = captureMetaAttribution(req);
 
     const reference = paymentReference(gateway, order.id);
-    const init = await initiatePayment(gateway, order, user, reference);
+    const init = await initiatePayment(gateway, order, user, reference, requestOrigin(req));
 
     if (!init.ok || !init.redirectUrl) {
       // The gateway's own wording is for us, not the customer.
@@ -204,7 +205,7 @@ router.post(
 
     const gateway = isGatewayConfigured(req.body.gateway) ? req.body.gateway : 'paystack';
     const reference = paymentReference(gateway, order.id);
-    const init = await initiatePayment(gateway, order, user, reference);
+    const init = await initiatePayment(gateway, order, user, reference, requestOrigin(req));
 
     if (!init.ok || !init.redirectUrl) {
       console.error('[orders] retry payment init failed:', init.error);

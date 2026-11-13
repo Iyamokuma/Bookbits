@@ -103,7 +103,7 @@ const presentPage = (p, nav) => ({
   updatedAt: p.updated_at,
 });
 
-function readPage(body) {
+async function readPage(body) {
   const title = String(body.title || '').trim();
   const slug = slugify(body.slug || title);
   const cover = String(body.coverImage || '').trim();
@@ -115,7 +115,7 @@ function readPage(body) {
     throw badRequest('The banner image must be an uploaded image or a full https:// link.');
   }
 
-  const html = sanitizeRichText(body.body);
+  const html = await sanitizeRichText(body.body);
   if (html.length > 500_000) throw badRequest('This page is too long to save. Try splitting it in two.');
 
   return {
@@ -196,7 +196,7 @@ router.get(
 router.post(
   '/admin/pages',
   asyncRoute(async (req, res) => {
-    const data = readPage(req.body);
+    const data = await readPage(req.body);
     if (await queryOne('SELECT id FROM pages WHERE slug = $1', [data.slug])) {
       throw badRequest(`Another page already uses the address /pages/${data.slug}.`);
     }
@@ -222,7 +222,7 @@ router.post(
     const existing = await queryOne('SELECT * FROM pages WHERE id = $1', [id]);
     if (!existing) throw notFound('That page no longer exists.');
 
-    const data = readPage(req.body);
+    const data = await readPage(req.body);
     if (await queryOne('SELECT id FROM pages WHERE slug = $1 AND id <> $2', [data.slug, id])) {
       throw badRequest(`Another page already uses the address /pages/${data.slug}.`);
     }

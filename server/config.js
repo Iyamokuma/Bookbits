@@ -15,10 +15,18 @@ const required = (key) => {
   return v;
 };
 
+// On a Vercel production deployment, the domain attached to the project is the
+// source of truth. BASE_URL is set by hand and once pointed at a deleted
+// deployment, which silently broke every payment return and email link.
+const vercelProductionUrl =
+  process.env.VERCEL_ENV === 'production' && process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : '';
+
 export const config = {
   env: process.env.NODE_ENV || 'development',
   port: Number(process.env.PORT || 3000),
-  baseUrl: (process.env.BASE_URL || 'http://localhost:3000').replace(/\/+$/, ''),
+  baseUrl: (vercelProductionUrl || process.env.BASE_URL || 'http://localhost:3000').replace(/\/+$/, ''),
 
   db: {
     connectionString: required('DATABASE_URL'),

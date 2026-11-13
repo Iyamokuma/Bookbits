@@ -1,4 +1,13 @@
-import sanitizeHtml from 'sanitize-html';
+// Loaded on first use rather than at startup. Only page saving and page
+// previews need it, so if the library ever fails to load in production it can
+// break those two features, never the whole API. (2.18 did exactly that: its
+// ESM-only parser can't be require()d by Vercel's function loader. Pinned to
+// 2.17.0 in package.json for that reason.)
+let sanitizeHtml;
+const load = async () => {
+  sanitizeHtml ??= (await import('sanitize-html')).default;
+  return sanitizeHtml;
+};
 
 /**
  * Clean HTML from the page editor before it is stored. The storefront renders
@@ -42,11 +51,11 @@ const OPTIONS = {
     (frame.tag === 'p' && !frame.text.trim() && frame.mediaChildren.length === 0),
 };
 
-export const sanitizeRichText = (html) => sanitizeHtml(String(html ?? ''), OPTIONS).trim();
+export const sanitizeRichText = async (html) => (await load())(String(html ?? ''), OPTIONS).trim();
 
 /** Plain text from stored HTML, for meta descriptions and previews. */
-export const htmlToText = (html) =>
-  sanitizeHtml(
+export const htmlToText = async (html) =>
+  (await load())(
     // Block boundaries become spaces, or "<p>One</p><p>Two</p>" reads "OneTwo".
     String(html ?? '').replace(/<(br|\/p|\/div|\/h\d|\/li|\/blockquote)\b[^>]*>/gi, ' $&'),
     { allowedTags: [], allowedAttributes: {} }

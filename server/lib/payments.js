@@ -55,9 +55,16 @@ async function httpJson(method, url, headers = {}, payload = null) {
 // Initialisation
 // --------------------------------------------------------------------------
 
-export async function initiatePayment(gateway, order, user, reference) {
+/**
+ * @param {string} [origin] Scheme and host the customer is checking out on.
+ *   The gateway sends them back there, so they return to the domain that holds
+ *   their session cookie, and a stale BASE_URL can't strand them on a dead
+ *   host. Falls back to BASE_URL.
+ */
+export async function initiatePayment(gateway, order, user, reference, origin = null) {
   const amount = Number(order.total || 0);
-  const callback = absoluteUrl(
+  const url = (path) => (origin ? origin + path : absoluteUrl(path));
+  const callback = url(
     `/api/payment/callback?gateway=${encodeURIComponent(gateway)}&order=${order.id}`
   );
 
@@ -103,7 +110,7 @@ export async function initiatePayment(gateway, order, user, reference) {
         currency: config.store.currencyCode,
         reference,
         redirect_url: callback,
-        notification_url: absoluteUrl('/api/payment/webhook?gateway=korapayment'),
+        notification_url: url('/api/payment/webhook?gateway=korapayment'),
         customer: { name: user.name, email: user.email },
       }
     );

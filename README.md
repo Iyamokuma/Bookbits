@@ -72,8 +72,11 @@ single function via `api/[...path].js`.
 Set every variable from `.env.example` in **Project Settings → Environment
 Variables**, with two deployment-specific notes:
 
-- `BASE_URL` must be your deployed URL. Payment callbacks and email links are
-  built from it.
+- `BASE_URL` is your deployed URL, used for email links and as the fallback
+  for everything else. On a production deployment, the project's production
+  domain (`VERCEL_PROJECT_PRODUCTION_URL`) takes precedence. Payment return
+  links and link previews use the domain the visitor is actually on, so a
+  stale `BASE_URL` can't send customers to a dead host.
 - `SUPABASE_SERVICE_KEY` is **required** in production. Vercel's filesystem is
   read-only, so admin cover uploads must go to object storage — see below.
 
